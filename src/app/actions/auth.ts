@@ -115,7 +115,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       .from('profiles')
       .update({
         profile_photo_url: publicUrl,
-      } as any)
+      })
       .eq('id', userId)
 
     if (profileError) {
@@ -139,7 +139,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error.errors[0]?.message || 'Validation failed',
+        error: validation.error.issues[0]?.message || 'Validation failed',
       }
     }
 
@@ -160,7 +160,14 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       return { success: false, error: 'Login failed' }
     }
 
-    return { success: true, data: data.user }
+    // Fetch role from profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    return { success: true, data: { user: data.user, role: (profile as any)?.role ?? 'user' } }
   } catch (error) {
     console.error('Unexpected error during login:', error)
     return { success: false, error: 'An unexpected error occurred. Please try again.' }

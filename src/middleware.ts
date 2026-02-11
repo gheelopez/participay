@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
+import type { Database } from '@/types/database.types'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -9,7 +10,7 @@ export async function middleware(request: NextRequest) {
   const response = await updateSession(request)
 
   // Create Supabase client to check auth status
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -17,7 +18,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll() {
           // Not needed for read-only operations
         },
       },
@@ -31,9 +32,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/landing', request.url))
   }
 
-  // Redirect unauthenticated users to login
-  if (!user && pathname === '/landing') {
+  // Redirect unauthenticated users away from protected pages
+  if (!user && (pathname === '/landing' || pathname.startsWith('/admin'))) {
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Protect /admin routes — only allow users with role = 'admin'
+  if (user && pathname.startsWith('/admin')) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const profile = data as { role: 'user' | 'admin' } | null
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/landing', request.url))
+    }
   }
 
   return response

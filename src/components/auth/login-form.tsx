@@ -67,7 +67,7 @@ export function LoginForm() {
       const result = await loginUser(validation.data)
 
       if (result.success) {
-        router.push('/landing')
+        router.push(result.data?.role === 'admin' ? '/admin' : '/landing')
       } else {
         setErrors({ form: result.error || 'Login failed' })
       }

@@ -20,6 +20,7 @@ export interface Database {
           profile_photo_url: string | null
           created_at: string
           updated_at: string
+          role: 'user' | 'admin'
         }
         Insert: {
           id: string
@@ -29,6 +30,7 @@ export interface Database {
           phone_number?: string | null
           school?: string | null
           profile_photo_url?: string | null
+          role?: 'user' | 'admin'
           created_at?: string
           updated_at?: string
         }
@@ -40,9 +42,11 @@ export interface Database {
           phone_number?: string | null
           school?: string | null
           profile_photo_url?: string | null
+          role?: 'user' | 'admin'
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       research_posts: {
         Row: {
@@ -81,7 +85,20 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      user_role: 'user' | 'admin'
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

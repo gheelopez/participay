@@ -43,6 +43,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       email: formData.get('email') as string,
       phoneNumber: formData.get('phoneNumber') as string,
       password: formData.get('password') as string,
+      confirmPassword: formData.get('confirmPassword') as string,
       profilePhoto: formData.get('profilePhoto') as File,
     }
 

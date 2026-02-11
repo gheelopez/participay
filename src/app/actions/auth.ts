@@ -47,12 +47,16 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
     }
 
     // 2. Validate with Zod
-    const validation = registerSchema.safeParse(data)
-    if (!validation.success) {
+    const validation = registerSchema.safeParse(data);
+      if (!validation.success) {
+      const formattedErrors = validation.error.flatten().fieldErrors;
+      
+      const firstErrorMessage = Object.values(formattedErrors).flat()[0];
+
       return {
         success: false,
-        error: validation.error.errors[0]?.message || 'Validation failed',
-      }
+        error: firstErrorMessage || 'Validation failed',
+      };
     }
 
     const supabase = await createClient()

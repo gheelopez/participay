@@ -137,3 +137,23 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+body {
+  letter-spacing: -0.02em;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.06em;
+  line-height: 1em;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 25px;
+  top: 30%;
+  transform: translateY(-50%);
+  filter: invert(40%) sepia(6%) saturate(0%) hue-rotate(180deg) brightness(95%);
+  opacity: 0.6;
+  transform: scale(1.4);
+  cursor: pointer;
+}

@@ -43,16 +43,21 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       email: formData.get('email') as string,
       phoneNumber: formData.get('phoneNumber') as string,
       password: formData.get('password') as string,
+      confirmPassword: formData.get('confirmPassword') as string,
       profilePhoto: formData.get('profilePhoto') as File,
     }
 
     // 2. Validate with Zod
-    const validation = registerSchema.safeParse(data)
-    if (!validation.success) {
+    const validation = registerSchema.safeParse(data);
+      if (!validation.success) {
+      const formattedErrors = validation.error.flatten().fieldErrors;
+      
+      const firstErrorMessage = Object.values(formattedErrors).flat()[0];
+
       return {
         success: false,
-        error: validation.error.errors[0]?.message || 'Validation failed',
-      }
+        error: firstErrorMessage || 'Validation failed',
+      };
     }
 
     const supabase = await createClient()

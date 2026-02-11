@@ -24,7 +24,7 @@ export const registerSchema = z.object({
     .email('Invalid email address'),
 
   phoneNumber: z.string()
-    .length(12, 'Phone number must be exactly 10 digits after +63')
+    .length(13, 'Phone number must be exactly 10 digits after +63')
     .regex(phoneRegex, 'Invalid phone number format'),
 
   password: z.string()

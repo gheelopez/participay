@@ -109,6 +109,7 @@ export function RegisterForm() {
       data.append('email', formData.email)
       data.append('phoneNumber', formData.phoneNumber)
       data.append('password', formData.password)
+      data.append('confirmPassword', formData.confirmPassword)
       data.append('profilePhoto', compressedPhoto)
 
       // Call server action

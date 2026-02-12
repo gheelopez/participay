@@ -120,7 +120,7 @@ export async function createResearchPost(input: CreateResearchPostInput): Promis
     if (!validation.success) {
       return { 
         success: false, 
-        error: validation.error.errors[0].message 
+        error: validation.error.issues[0].message 
       }
     }
 
@@ -170,7 +170,7 @@ export async function updateResearchPost(
     if (!validation.success) {
       return { 
         success: false, 
-        error: validation.error.errors[0].message 
+        error: validation.error.issues[0].message 
       }
     }
 

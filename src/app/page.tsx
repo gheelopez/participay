@@ -323,7 +323,7 @@ function TrustSection() {
   return (
     <section className="py-24" style={{ backgroundColor: '#132660' }}>
       <div ref={ref} className="section-animate max-w-6xl mx-auto px-6 text-center">
-        <h2 className="text-4xl font-bold text-white leading-tight mb-4">
+        <h2 className="text-5xl font-bold text-white leading-tight mb-4">
           Simple. Transparent. Safe.
         </h2>
         <p className="mb-16 text-lg" style={{ color: 'rgba(255,255,255,0.7)' }}>
@@ -331,7 +331,7 @@ function TrustSection() {
         </p>
         <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           <div className="rounded-2xl p-6 border text-left hover:bg-white/15 transition-all duration-300" style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '' }}>
               <Shield className="w-6 h-6 text-white" />
             </div>
             <h3 className="font-bold text-white leading-tight mb-2">No Data Collection</h3>
@@ -340,7 +340,7 @@ function TrustSection() {
             </p>
           </div>
           <div className="rounded-2xl p-6 border text-left hover:bg-white/15 transition-all duration-300" style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '' }}>
               <Lock className="w-6 h-6 text-white" />
             </div>
             <h3 className="font-bold text-white leading-tight mb-2">Transparent Process</h3>

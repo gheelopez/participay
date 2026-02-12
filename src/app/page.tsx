@@ -201,9 +201,9 @@ const participantBenefits = [
 function WhyUsSection() {
   const ref = useScrollAnimation()
   return (
-    <section className="py-24" style={{ backgroundColor: '#F9FAFB' }}>
+    <section className="py-24" style={{ backgroundColor: '#F4F4F4' }}>
       <div ref={ref} className="section-animate max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center leading-tight mb-4" style={{ color: '#132660' }}>
+        <h2 className="text-5xl font-bold text-center leading-tight mb-4" style={{ color: '#132660' }}>
           Why Use This Platform?
         </h2>
         <p className="text-center text-gray-500 mb-16 text-lg">Built for both sides of research.</p>
@@ -215,9 +215,9 @@ function WhyUsSection() {
               {researcherBenefits.map((b, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4"
+                  className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(19,38,96,0.1)' }}>
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '' }}>
                     <b.icon className="w-5 h-5" style={{ color: '#132660' }} />
                   </div>
                   <div>
@@ -235,10 +235,9 @@ function WhyUsSection() {
               {participantBenefits.map((b, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(165,196,212,0.2)' }}>
-                    <b.icon className="w-5 h-5" style={{ color: '#a5c4d4' }} />
+                  className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '' }}>
+                    <b.icon className="w-5 h-5" style={{ color: '#132660' }} />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm">{b.label}</p>

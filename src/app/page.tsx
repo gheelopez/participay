@@ -31,30 +31,55 @@ function useScrollAnimation() {
 
 function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <span className="text-2xl font-bold" style={{ color: '#132660' }}>ParticiPay</span>
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/studies" className="text-gray-600 hover:text-[#132660] transition-colors duration-200 text-sm font-medium">
-            Browse Studies
-          </Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            asChild
-            className="rounded-full border border-[#132660] bg-transparent text-[#132660] hover:bg-[#132660]/5 transition-all duration-300 ease-out"
-          >
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button
-            asChild
-            className="rounded-full bg-[#132660] text-white hover:bg-[#a5c4d4] hover:text-black transition-all duration-300 ease-out"
-          >
-            <Link href="/register">Register</Link>
-          </Button>
-        </div>
+    <div className="sticky top-0 z-50 bg-transparent">
+      <div className="px-8 py-8">
+        <nav className="max-w-8xl mx-auto bg-white rounded-full shadow-xl">
+          <div className="px-8 py-4 flex items-center justify-between">
+            {/* Logo */}
+            <span className="text-2xl font-bold">
+              <h1 className='text-[#132660]'><i>Partici</i><i className='text-[#a5c4d4]'>Pay</i></h1>
+            </span>
+
+            {/* Right Side */}
+            <div className="flex items-center gap-9">
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center gap-8">
+                <Link
+                  href="/browse"
+                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-bold"
+                >
+                  <h1>Browse</h1>
+                </Link>
+                <Link
+                  href="/profile"
+                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-bold"
+                >
+                  Profile
+                </Link>
+              </div>
+
+              {/* Auth Buttons */}
+              <div className="flex items-center gap-3">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-2 border-[#132660] bg-white text-[#132660] hover:bg-gray-50 px-8 py-2 font-medium transition-all duration-200"
+                >
+                  <Link href="/login">Log In</Link>
+                </Button>
+
+                <Button
+                  asChild
+                  className="rounded-full bg-[#132660] text-white hover:bg-[#0f1d4a] px-8 py-2 font-medium transition-all duration-200"
+                >
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </nav>
       </div>
-    </nav>
+    </div>
   )
 }
 
@@ -405,7 +430,7 @@ function Footer() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F4F4F4]">
       <Navbar />
       <HeroSection />
       <HowItWorksSection />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent, useRef } from 'react'
+import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import imageCompression from 'browser-image-compression'
@@ -19,7 +19,6 @@ interface FormData {
   lastName: string
   email: string
   phoneNumber: string
-  dateOfBirth: string
   username: string
   password: string
   confirmPassword: string
@@ -39,7 +38,6 @@ export function RegisterForm() {
     lastName: '',
     email: '',
     phoneNumber: '',
-    dateOfBirth: '',
     username: '',
     password: '',
     confirmPassword: '',
@@ -49,8 +47,6 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isPhoneFocused, setIsPhoneFocused] = useState(false)
-  const [isDobFocused, setIsDobFocused] = useState(false)
-  const dobRef = useRef<HTMLInputElement | null>(null)
 
   const formatPHNumber = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 10)
@@ -102,10 +98,6 @@ export function RegisterForm() {
     if (!formData.phoneNumber.trim()) {
       step1Errors.phoneNumber = 'Phone number is required'
     }
-    if (!formData.dateOfBirth.trim()) {
-      step1Errors.dateOfBirth = 'Date of birth is required'
-    }
-
     if (Object.keys(step1Errors).length > 0) {
       setErrors(step1Errors)
       return
@@ -166,7 +158,6 @@ export function RegisterForm() {
       data.append('lastName', formData.lastName)
       data.append('email', formData.email)
       data.append('phoneNumber', formData.phoneNumber)
-      data.append('dateOfBirth', formData.dateOfBirth)
       data.append('username', formData.username)
       data.append('password', formData.password)
       data.append('confirmPassword', formData.confirmPassword)
@@ -445,67 +436,6 @@ export function RegisterForm() {
                   {errors.phoneNumber && (
                     <p className="absolute -bottom-5 left-6 text-xs text-destructive">
                       {errors.phoneNumber}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Date of Birth */}
-              <div className="space-y-2">
-                <div className="relative w-full">
-                  <input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => {
-                      setFormData({ ...formData, dateOfBirth: e.target.value })
-                      if (errors.dateOfBirth) setErrors({ ...errors, dateOfBirth: "" })
-                    }}
-                    onFocus={() => setIsDobFocused(true)}
-                    onBlur={() => setIsDobFocused(false)}
-                    disabled={isLoading}
-                    className={`
-                      peer w-full
-                      rounded-full
-                      px-6 pt-5 pb-2
-                      text-base
-                      bg-white
-                      outline-none
-                      transition-all duration-300
-                      border
-                      ${
-                        errors.dateOfBirth
-                          ? "border-destructive focus:border-destructive"
-                          : "focus:border-gray-300"
-                      }
-                      ${
-                        !isDobFocused && !formData.dateOfBirth
-                          ? "text-transparent"
-                          : "text-black"
-                      }
-                    `}
-                  />
-
-
-                  <label
-                    htmlFor="dateOfBirth"
-                    className={`
-                      absolute left-6 pointer-events-none
-                      transition-all duration-300 ease-out
-                      ${
-                        isDobFocused || formData.dateOfBirth
-                          ? "top-2 translate-y-0 text-xs"
-                          : "top-1/2 -translate-y-1/2 text-sm"
-                      }
-                      ${errors.dateOfBirth ? "text-destructive" : "text-gray-400"}
-                    `}
-                  >
-                    Date of Birth
-                  </label>
-
-                  {errors.dateOfBirth && (
-                    <p className="absolute -bottom-5 left-6 text-xs text-destructive">
-                      {errors.dateOfBirth}
                     </p>
                   )}
                 </div>

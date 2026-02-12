@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import { RegisterForm } from '@/components/auth/register-form'
 
 export const metadata: Metadata = {
-  title: 'Register | Participay',
-  description: 'Create your Participay account',
+  title: 'Register | ParticiPay',
+  description: 'Create your ParticiPay account',
 }
 
 export default function RegisterPage() {

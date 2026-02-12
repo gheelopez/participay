@@ -80,45 +80,150 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>
+    <Card className="w-full border-none bg-transparent shadow-none">
+      <CardHeader className="text-center">
+        <CardTitle className="text-4xl">
+          <h1>Welcome back</h1>
+        </CardTitle>
+        <CardDescription className="text-base text-black leading-[1.2] mt-1">
           Enter your credentials to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {errors.form && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errors.form}</AlertDescription>
-            </Alert>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2 mt-16">
+            <div className="relative w-full">
+              <input
+                id="email"
+                type="text"
+                placeholder=" "
+                value={formData.email}
+                onChange={handleInputChange("email")}
+                disabled={isLoading}
+                className={`
+                  peer w-full
+                  rounded-full
+                  px-6 pt-5 pb-2
+                  text-black text-base
+                  bg-white
+                  outline-none
+                  transition-all duration-300
+                  border
+                  ${
+                    errors.email
+                      ? "border-destructive focus:border-destructive"
+                      : "focus:border-gray-300"
+                  }
+                `}
+                autoComplete="email"
+              />
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="john.doe@example.com"
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              disabled={isLoading}
-              className={errors.email ? 'border-destructive' : ''}
-              autoComplete="email"
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
+              <label
+                htmlFor="email"
+                className={`
+                  absolute left-6
+                  transition-all duration-300 ease-out
+                  pointer-events-none
+                  top-1/2 -translate-y-1/2 text-sm
+                  peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs
+                  peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:text-xs
+                  ${
+                    errors.email
+                      ? "text-destructive"
+                      : "text-gray-400"
+                  }
+                `}
+              >
+                Email
+              </label>
+
+              {errors.email && (
+                <p className="absolute -bottom-5 left-2 flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.email}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+          <div className="space-y-1">
+              <div className="relative w-full">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder=" "
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                disabled={isLoading}
+                className={`
+                  peer w-full
+                  rounded-full
+                  px-6 pt-5 pb-2 pr-12
+                  text-black text-base
+                  bg-white
+                  outline-none
+                  transition-all duration-300
+                  border
+                  ${
+                    errors.password
+                      ? "border-destructive focus:border-destructive"
+                      : "focus:border-gray-300"
+                  }
+                `}
+                autoComplete="current-password"
+              />
+
+              <label
+                htmlFor="password"
+                className={`
+                  absolute left-6
+                  transition-all duration-300 ease-out
+                  pointer-events-none
+                  top-1/2 -translate-y-1/2 text-sm
+                  peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs
+                  peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:text-xs
+                  ${
+                    errors.password
+                      ? "text-destructive"
+                      : "text-gray-400"
+                  }
+                `}
+              >
+                Password
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer transition-colors z-10 hover:text-gray-600"
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <Eye className="h-5 w-5" />
+                  ) : (
+                  <EyeOff className="h-5 w-5" />
+                )}
+              </button>
+
+              {errors.password && (
+                <p className="absolute -bottom-5 left-2 flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.password}
+                </p>
+              )}
+
+              {errors.form && (
+                <p className="absolute -bottom-5 left-2 flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.form}
+                </p>
+              )}
+
+            </div>
+            <div className="flex justify-end pr-5">
               <Link
                 href="#"
-                className="text-sm text-muted-foreground hover:text-primary"
+                className="text-xs text-gray-600 hover:text-[#a5c4d4] hover:underline font-medium"
                 onClick={(e) => {
                   e.preventDefault()
                   alert('Password reset functionality coming soon!')
@@ -127,50 +232,43 @@ export function LoginForm() {
                 Forgot password?
               </Link>
             </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={handleInputChange('password')}
-                disabled={isLoading}
-                className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer transition-colors"
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <Eye className="h-4 w-4" />
-                ) : (
-                  <EyeOff className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
-            )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="
+              w-full
+              rounded-full
+              py-6
+              mt-10
+              text-base
+              font-medium
+              bg-[#132660]
+              text-white
+              transition-all duration-300 ease-out
+              hover:text-white
+              hover:bg-[#a5c4d4]
+              hover:shadow-lg
+              active:scale-[0.98]
+              disabled:opacity-60 disabled:cursor-not-allowed
+            "
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
+                Logging In...
               </>
             ) : (
-              'Sign in'
+              'Log In'
             )}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Create one
+            <Link href="/register" className="text-black hover:text-[#a5c4d4] hover:underline font-medium">
+              Sign Up
             </Link>
           </p>
         </form>

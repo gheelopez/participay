@@ -15,7 +15,7 @@ export async function checkRateLimit(
   const ip = forwarded ? forwarded.split(',')[0].trim() : (headersList.get('x-real-ip') ?? '127.0.0.1')
 
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('check_rate_limit', {
+  const { data, error } = await (supabase as any).rpc('check_rate_limit', {
     p_ip: ip,
     p_endpoint: endpoint,
     p_limit: limit,

@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { loginSchema } from "@/lib/validations/auth"; // Your Zod schema
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    // Rate limit: 30 requests per minute per IP
+    const limit = await checkRateLimit('captcha', 30, 60)
+    if (!limit.allowed) {
+      return NextResponse.json({ success: false, message: limit.error }, { status: 429 })
+    }
+
     const body = await request.json();
 
     // 1. Zod Validation (Checks email, password, AND token)

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // File validation helper
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
 
 // Phone number regex for Philippines format (+63 followed by 10 digits)
 const phoneRegex = /^\+63\d{10}$/
@@ -20,8 +20,7 @@ export const registerSchema = z.object({
     .min(1, 'Last name is required')
     .max(50, 'Last name is too long'),
 
-  email: z.string()
-    .email('Invalid email address'),
+  email: z.email('Invalid email address'),
 
   phoneNumber: z.string()
     .length(13, 'Phone number must be exactly 10 digits after +63')
@@ -41,7 +40,7 @@ export const registerSchema = z.object({
     .refine((file) => file.size <= MAX_FILE_SIZE, 'File size must be less than 5MB')
     .refine(
       (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-      'Only JPEG, PNG, and WebP images are accepted'
+      'Only JPEG and PNG images are accepted'
     ),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -50,8 +49,7 @@ export const registerSchema = z.object({
 
 // Schema for user login
 export const loginSchema = z.object({
-  email: z.string()
-    .email('Invalid email address'),
+  email: z.email('Invalid email address'),
 
   password: z.string()
     .min(1, 'Password is required'),

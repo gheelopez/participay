@@ -7,8 +7,7 @@ import {
 } from "@/hooks/use-file-upload"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { AlertCircle, User, X } from "lucide-react"
+import { AlertCircle, Upload, ImagePlus } from "lucide-react"
 
 interface AvatarUploadProps {
   maxSize?: number
@@ -26,7 +25,6 @@ export function AvatarUpload({
   const [
     { files, isDragging, errors },
     {
-      removeFile,
       handleDragEnter,
       handleDragLeave,
       handleDragOver,
@@ -37,7 +35,7 @@ export function AvatarUpload({
   ] = useFileUpload({
     maxFiles: 1,
     maxSize,
-    accept: "image/jpeg,image/jpg,image/png,image/webp",
+    accept: "image/jpeg,image/jpg,image/png",
     multiple: false,
     onFilesChange: (files) => {
       onFileChange?.(files[0] || null)
@@ -47,23 +45,22 @@ export function AvatarUpload({
   const currentFile = files[0]
   const previewUrl = currentFile?.preview || defaultAvatar
 
-  const handleRemove = () => {
-    if (currentFile) {
-      removeFile(currentFile.id)
-    }
-  }
-
   return (
-    <div className={cn("flex flex-col items-center gap-4", className)}>
+    <div className={cn("flex flex-col items-center gap-3", className)}>
       {/* Avatar Preview */}
       <div className="relative">
         <div
           className={cn(
-            "group/avatar relative h-74.5 w-74.5 cursor-pointer overflow-hidden rounded-full border border-dashed transition-colors",
+            "relative h-81 w-81 cursor-pointer overflow-hidden rounded-full transition-all duration-200",
             isDragging
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/25 hover:border-muted-foreground/50",
-            previewUrl && "border-solid"
+              ? "ring-2 ring-[#132660] ring-offset-2 scale-105"
+              : "hover:ring-2 hover:ring-gray-300 hover:ring-offset-2",
+            !previewUrl && "border-2 border-dashed",
+            !previewUrl && isDragging
+              ? "border-[#132660] bg-blue-50"
+              : !previewUrl
+              ? "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
+              : ""
           )}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -74,41 +71,48 @@ export function AvatarUpload({
           <input {...getInputProps()} className="sr-only" />
 
           {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="Avatar"
-              className="h-full w-full object-cover"
-            />
+            <>
+              <img
+                src={previewUrl}
+                alt="Avatar"
+                className="h-full w-full object-cover"
+              />
+              {/* Hover / drag overlay on existing photo */}
+              <div className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 bg-black/40",
+                isDragging ? "opacity-100" : "opacity-0 hover:opacity-100"
+              )}>
+                <ImagePlus className="size-8 text-white" />
+                <span className="text-xs text-white font-medium">
+                  {isDragging ? "Drop to replace" : "Change photo"}
+                </span>
+              </div>
+            </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User className="text-muted-foreground size-20" />
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center">
+              <Upload className={cn(
+                "size-10 transition-colors",
+                isDragging ? "text-[#132660]" : "text-gray-400"
+              )} />
+              <div>
+                <p className={cn(
+                  "text-sm font-medium transition-colors",
+                  isDragging ? "text-[#132660]" : "text-gray-500"
+                )}>
+                  {isDragging ? "Drop here" : "Drag photo here"}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">or click to browse</p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Remove Button */}
-        {currentFile && (
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={handleRemove}
-            className="absolute top-6 right-7 z-10 size-8 rounded-full shadow-sm bg-white text-black hover:bg-gray-50 hover:text-black"
-            aria-label="Remove avatar"
-          >
-            <X className="size-3.5" />
-          </Button>
-        )}
       </div>
 
       {/* Upload Instructions */}
-      <div className="space-y-0.5 text-center">
-        <p className="text-sm font-medium">
-          {currentFile ? "Avatar uploaded" : "Upload avatar"}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          PNG, JPG up to {formatBytes(maxSize)}
-        </p>
-      </div>
+      <p className="text-muted-foreground text-xs text-center">
+        PNG, JPG up to {formatBytes(maxSize)}
+      </p>
 
       {/* Error Messages */}
       {errors.length > 0 && (

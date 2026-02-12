@@ -354,53 +354,17 @@ function TrustSection() {
   )
 }
 
-function FinalCTASection() {
-  const ref = useScrollAnimation()
-  return (
-    <section className="py-20" style={{ backgroundColor: '#a5c4d4' }}>
-      <div ref={ref} className="section-animate max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: '#132660' }}>
-          Ready to participate or recruit?
-        </h2>
-        <p className="text-lg mb-10" style={{ color: 'rgba(19,38,96,0.7)' }}>
-          Join researchers and participants already using ParticiPay.
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Button
-            asChild
-            className="rounded-full py-6 px-8 text-white transition-all duration-300 ease-out"
-            style={{ backgroundColor: '#132660' }}
-          >
-            <Link href="/studies" className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Browse Studies
-            </Link>
-          </Button>
-          <Button
-            asChild
-            className="rounded-full py-6 px-8 bg-transparent border-2 transition-all duration-300 ease-out"
-            style={{ borderColor: '#132660', color: '#132660' }}
-          >
-            <Link href="/register" className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Post a Study
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function Footer() {
   return (
-    <footer className="py-12" style={{ backgroundColor: '#0d1a47' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
+    <footer className="py-20" style={{ backgroundColor: '#1E1E1E' }}>
+      <div className=" mx-10 px-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8 mt-10">
           <div>
-            <p className="text-2xl font-bold text-white mb-2">ParticiPay</p>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Connecting researchers with willing participants.
+            <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: '#f4f4f4' }}>
+              Ready to participate or recruit?
+            </h2>
+            <p className="text-lg mb-10" style={{ color: '#f4f4f4', opacity: '0.5' }}>
+              Join researchers and participants already using ParticiPay.
             </p>
           </div>
           <div className="flex flex-wrap gap-6">
@@ -408,16 +372,16 @@ function Footer() {
               Browse Studies
             </Link>
             <Link href="/login" className="text-sm transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Login
+              Log In
             </Link>
             <Link href="/register" className="text-sm transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Register
+              Sign Up
             </Link>
           </div>
         </div>
         <div className="pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            &copy; {new Date().getFullYear()} ParticiPay. All rights reserved.
+            {new Date().getFullYear()} &copy; Bilbao, Bon, David, Lopez
           </p>
         </div>
       </div>
@@ -434,7 +398,6 @@ export default function Home() {
       <WhyUsSection />
       <CompensationSection />
       <TrustSection />
-      <FinalCTASection />
       <Footer />
     </div>
   )

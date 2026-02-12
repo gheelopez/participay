@@ -85,7 +85,7 @@ function Navbar() {
 
 function HeroSection() {
   return (
-    <section className="py-50 text-center" style={{ backgroundColor: '#F4F4F4' }}>
+    <section className="py-55 text-center" style={{ backgroundColor: '#F4F4F4' }}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both max-w-4xl mx-auto px-2">
         <h1 className="text-6xl md:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#132660] via-[#2040a0] to-[#a5c4d4] bg-clip-text text-transparent">
           Find Research Participants.<br />
@@ -135,26 +135,26 @@ const researcherSteps = [
 function HowItWorksSection() {
   const ref = useScrollAnimation()
   return (
-    <section className="py-24 bg-white">
+    <section className="py-30 bg-[#132660]">
       <div ref={ref} className="section-animate max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center leading-tight mb-16" style={{ color: '#132660' }}>
+        <h2 className="text-5xl font-semibold text-left leading-tight mb-16" style={{ color: '#F4F4F4' }}>
           How It Works
         </h2>
         <div className="grid md:grid-cols-2 gap-12">
           {/* Participants column */}
           <div style={{ transitionDelay: '0.1s' }}>
-            <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-100" style={{ color: '#132660' }}>
+            <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-400" style={{ color: '#F4F4F4' }}>
               For Participants
             </h3>
             <div className="flex flex-col gap-6">
               {participantSteps.map((step, i) => (
                 <div key={i} className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#132660' }}>
-                    <step.icon className="w-5 h-5" style={{ color: '#a5c4d4' }} />
+                    <step.icon   strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{step.label}</p>
-                    <p className="text-gray-500 text-sm mt-1">{step.desc}</p>
+                    <p className="font-medium text-[#F4F4F4]">{step.label}</p>
+                    <p className="text-gray-400 text-sm mt-1">{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -162,18 +162,18 @@ function HowItWorksSection() {
           </div>
           {/* Researchers column */}
           <div style={{ transitionDelay: '0.2s' }}>
-            <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-100" style={{ color: '#132660' }}>
+            <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-400" style={{ color: '#F4F4F4' }}>
               For Researchers
             </h3>
             <div className="flex flex-col gap-6">
               {researcherSteps.map((step, i) => (
                 <div key={i} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#a5c4d4' }}>
-                    <step.icon className="w-5 h-5" style={{ color: '#132660' }} />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
+                    <step.icon   strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{step.label}</p>
-                    <p className="text-gray-500 text-sm mt-1">{step.desc}</p>
+                    <p className="font-medium text-[#F4F4F4]">{step.label}</p>
+                    <p className="text-gray-400 text-sm mt-1">{step.desc}</p>
                   </div>
                 </div>
               ))}

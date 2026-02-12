@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { getCurrentUser, logoutUser } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'

@@ -51,7 +51,7 @@ export function AvatarUpload({
       <div className="relative">
         <div
           className={cn(
-            "relative h-67 w-67 cursor-pointer overflow-hidden rounded-full transition-all duration-200",
+            "relative h-52 w-52 cursor-pointer overflow-hidden rounded-full transition-all duration-200",
             isDragging
               ? "ring-2 ring-[#132660] ring-offset-2 scale-105"
               : "hover:ring-2 hover:ring-gray-300 hover:ring-offset-2",

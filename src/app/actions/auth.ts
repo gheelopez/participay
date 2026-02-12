@@ -13,13 +13,16 @@ type ActionResponse<T = void> = {
   error?: string
 }
 
-// Helper function to map Supabase auth errors to user-friendly messages
+// Helper function to map Supabase auth errors to user-friendly messages.
+// All messages are intentionally generic — do not distinguish between
+// "email not found" and "wrong password" to prevent user enumeration.
 function mapAuthError(error: AuthError): string {
   const errorMap: Record<string, string> = {
-    'User already registered': 'An account with this email already exists',
-    'Invalid login credentials': 'Invalid email or password',
-    'Email not confirmed': 'Please verify your email before logging in',
-    'Password should be at least 8 characters': 'Password is too weak',
+    // Collapsed into the same message as invalid credentials — revealing that
+    // an email is unconfirmed tells an attacker the account exists.
+    'Email not confirmed': 'Incorrect email or password',
+    'Invalid login credentials': 'Incorrect email or password',
+    'Password should be at least 8 characters': 'Password is too short',
   }
 
   return errorMap[error.message] || 'Authentication failed. Please try again.'
@@ -100,6 +103,11 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 
     if (authError) {
       console.error('Auth error:', authError)
+      // Generic message — does not confirm whether email or phone is the
+      // duplicate, or that an account exists at all.
+      if (authError.message === 'User already registered') {
+        return { success: false, error: 'Unable to create account. Please check your details or try logging in.' }
+      }
       return { success: false, error: mapAuthError(authError) }
     }
 

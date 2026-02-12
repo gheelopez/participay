@@ -21,6 +21,7 @@ export interface Database {
           created_at: string
           updated_at: string
           role: 'user' | 'admin'
+          failed_attempts: number
         }
         Insert: {
           id: string

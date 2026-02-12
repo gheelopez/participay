@@ -58,7 +58,7 @@ export const loginSchema = z.object({
     .min(1, 'Password is required'),
 
   captchaToken: z.string()
-    .min(1, "Please verify you are not a robot"),
+    .optional(),
 })
 
 // Export types

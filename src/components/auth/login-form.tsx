@@ -25,6 +25,7 @@ interface FormErrors {
 export function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -51,7 +52,7 @@ export function LoginForm() {
 
     try {
       // Validate with Zod
-      const validation = loginSchema.safeParse({...formData, captchaToken})
+      const validation = loginSchema.safeParse({...formData, captchaToken: captchaToken || undefined})
 
       if (!validation.success) {
         const fieldErrors: FormErrors = {}
@@ -72,6 +73,9 @@ export function LoginForm() {
       if (result.success) {
         router.push(result.data?.role === 'admin' ? '/admin' : '/landing')
       } else {
+        if(result.requiresCaptcha){
+          setShowCaptcha(true);
+        }
         setErrors({ form: result.error || 'Login failed' });
         recaptchaRef.current?.reset();
         setCaptchaToken(null);
@@ -241,13 +245,24 @@ export function LoginForm() {
           </div>
 
           {/*CAPTCHA*/}
-          <div className="flex justify-center py-2">
+          {showCaptcha && (
+          <div className="flex flex-col items-center py-2 animate-in fade-in duration-500">
             <ReCAPTCHA
               ref={recaptchaRef}
               sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-              onChange={(token) => setCaptchaToken(token)}
+              onChange={(token) => {
+                setCaptchaToken(token);
+                if (errors.captchaToken) setErrors({ ...errors, captchaToken: '' });
+              }}
             />
+            {errors.captchaToken && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors.captchaToken}
+              </p>
+            )}
           </div>
+        )}
 
           <Button
             type="submit"

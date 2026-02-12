@@ -11,6 +11,7 @@ type ActionResponse<T = void> = {
   success: boolean
   data?: T
   error?: string
+  requiresCaptcha?: boolean
 }
 
 // Helper function to map Supabase auth errors to user-friendly messages.
@@ -196,15 +197,38 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       }
     }
 
-    // 2. CAPTCHA Verification
-    const isHuman = await verifyCaptcha(validation.data.captchaToken);
-      if (!isHuman) {
-        return { success: false, error: 'CAPTCHA verification failed. Please try again.' };
-    }
-
     const supabase = await createClient()
 
-    // 3. Sign in with Supabase
+    // 2. get failure count from db
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('failed_attempts')
+      .eq('email', validation.data.email)
+      .single();
+
+    const {email, password, captchaToken} = validation.data;
+    const attempts = (profileData as any)?.failed_attempts || 0;
+
+    // 3. captcha verification after 3 failed attempts
+    if (attempts >= 4) {
+      if (!captchaToken) {
+        return { 
+          success: false, 
+          error: 'Security check required.', 
+          requiresCaptcha: true 
+        };
+      }
+      const isHuman = await verifyCaptcha(captchaToken);
+      if (!isHuman) {
+        return { 
+          success: false, 
+          error: 'CAPTCHA verification failed. Please try again.', 
+          requiresCaptcha: true 
+        };
+      }
+    }
+
+    // 4. Sign in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email: validation.data.email,
       password: validation.data.password,
@@ -212,12 +236,23 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
 
     if (error) {
       console.error('Login error:', error)
-      return { success: false, error: mapAuthError(error) }
+      //increment failed attempts
+      await supabase
+        .from('profiles')
+        .update({ failed_attempts: attempts + 1 } as any)
+        .eq('email', email);
+      return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 3 }
     }
 
     if (!data.user) {
       return { success: false, error: 'Login failed' }
     }
+
+    //reset failed attempts on successful login
+    await supabase
+      .from('profiles')
+      .update({ failed_attempts: 0 } as any)
+      .eq('id', data.user.id);
 
     // Fetch role from profile
     const { data: profile } = await supabase

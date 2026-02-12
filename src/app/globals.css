@@ -97,7 +97,7 @@ body {
   }
 }
 
-body {
+body, p {
   letter-spacing: -0.02em;
 }
 

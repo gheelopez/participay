@@ -32,8 +32,8 @@ function useScrollAnimation() {
 function Navbar() {
   return (
     <div className="sticky top-0 z-50 bg-transparent">
-      <div className="px-8 py-8">
-        <nav className="max-w-8xl mx-auto bg-white rounded-full shadow-xl">
+      <div className="px-8 py-6">
+        <nav className="max-w-8xl mx-auto bg-white rounded-full shadow-lg">
           <div className="px-8 py-4 flex items-center justify-between">
             {/* Logo */}
             <span className="text-2xl font-bold">
@@ -46,13 +46,13 @@ function Navbar() {
               <div className="hidden md:flex items-center gap-8">
                 <Link
                   href="/browse"
-                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-bold"
+                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-medium"
                 >
                   <h1>Browse</h1>
                 </Link>
                 <Link
                   href="/profile"
-                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-bold"
+                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-medium"
                 >
                   Profile
                 </Link>
@@ -63,7 +63,7 @@ function Navbar() {
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-full border-2 border-[#132660] bg-white text-[#132660] hover:bg-gray-50 px-8 py-2 font-medium transition-all duration-200"
+                  className="rounded-full border-1 border-[#132660] bg-white text-[#132660] hover:bg-gray-50 px-8 py-2 font-medium transition-all duration-200"
                 >
                   <Link href="/login">Log In</Link>
                 </Button>
@@ -85,36 +85,34 @@ function Navbar() {
 
 function HeroSection() {
   return (
-    <section className="py-28 text-center" style={{ backgroundColor: '#132660' }}>
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both max-w-4xl mx-auto px-6">
-        <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
-          Find Research Participants.<br />Discover Research Opportunities.
+    <section className="py-50 text-center" style={{ backgroundColor: '#F4F4F4' }}>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both max-w-4xl mx-auto px-2">
+        <h1 className="text-6xl md:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#132660] via-[#2040a0] to-[#a5c4d4] bg-clip-text text-transparent">
+          Find Research Participants.<br />
+          Discover Research Opportunities.
         </h1>
-        <p className="text-lg mb-10" style={{ color: '#a5c4d4' }}>
+        <p className="text-xl mb-10" style={{ color: '#132660' }}>
           A platform connecting researchers with willing participants for academic and scientific studies.
         </p>
-        <div className="flex gap-4 justify-center flex-wrap">
+        <div className="flex gap-5 justify-center flex-wrap">
           <Button
             asChild
-            className="rounded-full py-6 px-8 hover:shadow-lg transition-all duration-300 ease-out"
-            style={{ backgroundColor: '#a5c4d4', color: '#000' }}
+            className="rounded-full py-6 px-6 bg-transparent border-1 border-[#132660] hover:border-[#a5c4d4] hover:bg-[#a5c4d4] hover:text-[#F4F4F4] text-[#132660] transition-all duration-300 ease-out"
           >
             <Link href="/studies" className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
               Browse Studies
             </Link>
           </Button>
           <Button
             asChild
-            className="rounded-full py-6 px-8 bg-transparent border-2 border-white text-white hover:bg-white/10 transition-all duration-300 ease-out"
+            className="rounded-full py-6 px-8 bg-[#132660] text-[#F4F4F4] hover:bg-[#a5c4d4] transition-all duration-300 ease-out"
           >
             <Link href="/register" className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
               Post a Study
             </Link>
           </Button>
         </div>
-        <p className="mt-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <p className="mt-4 text-sm" style={{ color: '#132660', opacity: '0.5'}}>
           No registration required to browse.
         </p>
       </div>

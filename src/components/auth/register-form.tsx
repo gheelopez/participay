@@ -191,7 +191,7 @@ export function RegisterForm() {
 
           {/* Step 1: Personal Details */}
           {currentStep === 1 && (
-            <div className="space-y-1/2 mt-1">
+            <div className="space-y-1/2 mt-0">
               <p className="text-sm text-gray-400 mb-3 ml-3">Personal Details</p>
 
               {/* First Name & Last Name */}
@@ -559,9 +559,8 @@ export function RegisterForm() {
 
           {/* Step 2: Profile Photo */}
           {currentStep === 2 && (
-            <div className="space-y-5 mt-10">
-              <p className="text-base text-gray-400 mb-3 ml-3">Profile Photo</p>
-
+            <div className="space-y-5 mt-4">
+              <p className="text-sm text-gray-400 mb-3 ml-3">Profile Photo</p>
               <AvatarUpload
                 onFileChange={(fileWithPreview) => {
                   const file = fileWithPreview?.file instanceof File ? fileWithPreview.file : null

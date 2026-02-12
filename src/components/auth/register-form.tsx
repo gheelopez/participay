@@ -66,7 +66,11 @@ export function RegisterForm() {
   const handleInputChange = (field: keyof FormData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData({ ...formData, [field]: e.target.value })
+    let value = e.target.value
+    if ((field === 'firstName' || field === 'lastName') && value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1)
+    }
+    setFormData({ ...formData, [field]: value })
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' })

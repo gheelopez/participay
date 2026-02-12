@@ -210,7 +210,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     const attempts = (profileData as any)?.failed_attempts || 0;
 
     // 3. captcha verification after 3 failed attempts
-    if (attempts >= 4) {
+    if (attempts >= 3) {
       if (!captchaToken) {
         return { 
           success: false, 
@@ -238,7 +238,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       console.error('Login error:', error)
       //increment failed attempts
       await (supabase as any).rpc('increment_failed_attempts', { user_email: email });
-      return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 4 }
+      return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 3 }
     }
 
     if (!data.user) {

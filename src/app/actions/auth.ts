@@ -33,6 +33,22 @@ function sanitizeFilename(filename: string): string {
     .toLowerCase()
 }
 
+// Helper function to verify file content matches JPEG or PNG magic bytes
+async function validateFileSignature(file: File): Promise<boolean> {
+  const buffer = await file.slice(0, 8).arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+
+  // JPEG: FF D8 FF
+  const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  const isPng =
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47 &&
+    bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A
+
+  return isJpeg || isPng
+}
+
 // 1. REGISTER USER
 export async function registerUser(formData: FormData): Promise<ActionResponse<any>> {
   try {
@@ -60,9 +76,15 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       };
     }
 
+    // 3. Verify file content matches declared image type
+    const isValidSignature = await validateFileSignature(validation.data.profilePhoto)
+    if (!isValidSignature) {
+      return { success: false, error: 'Invalid file: content does not match an image format' }
+    }
+
     const supabase = await createClient()
 
-    // 3. Sign up user with Supabase
+    // 4. Sign up user with Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validation.data.email,
       password: validation.data.password,
@@ -87,7 +109,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 
     const userId = authData.user.id
 
-    // 4. Upload profile photo to storage
+    // 5. Upload profile photo to storage
     const sanitizedFilename = sanitizeFilename(validation.data.profilePhoto.name)
     const fileName = `${userId}/${Date.now()}-${sanitizedFilename}`
 
@@ -105,12 +127,12 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       return { success: false, error: 'Failed to upload profile photo. Please try again.' }
     }
 
-    // 5. Get public URL
+    // 6. Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('profile-photos')
       .getPublicUrl(fileName)
 
-    // 6. Update profile with photo URL (profile already created by trigger)
+    // 7. Update profile with photo URL (profile already created by trigger)
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -123,7 +145,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       return { success: false, error: 'Failed to update user profile' }
     }
 
-    // 7. Return success (user is auto-logged in by Supabase)
+    // 8. Return success (user is auto-logged in by Supabase)
     return { success: true, data: authData.user }
   } catch (error) {
     console.error('Unexpected error during registration:', error)

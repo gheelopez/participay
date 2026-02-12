@@ -7,8 +7,8 @@ const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/web
 // Phone number regex for Philippines format (+63 followed by 10 digits)
 const phoneRegex = /^\+63\d{10}$/
 
-// Password validation: at least 8 chars, 1 uppercase, 1 lowercase, 1 number
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
+// Password validation: at least 8 chars, 1 uppercase, 1 number, 1 special character
+const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/
 
 // Schema for user registration
 export const registerSchema = z.object({

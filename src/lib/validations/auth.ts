@@ -42,6 +42,9 @@ export const registerSchema = z.object({
       (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
       'Only JPEG and PNG images are accepted'
     ),
+
+  captchaToken: z.string()
+    .min(1, "Please verify you are not a robot"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -53,6 +56,9 @@ export const loginSchema = z.object({
 
   password: z.string()
     .min(1, 'Password is required'),
+
+  captchaToken: z.string()
+    .min(1, "Please verify you are not a robot"),
 })
 
 // Export types

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef} from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { loginUser } from '@/app/actions/auth'
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface LoginFormData {
   email: string
@@ -30,7 +31,9 @@ export function LoginForm() {
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [showPassword, setShowPassword] = useState(false)
-
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  
   const handleInputChange = (field: keyof LoginFormData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -48,7 +51,7 @@ export function LoginForm() {
 
     try {
       // Validate with Zod
-      const validation = loginSchema.safeParse(formData)
+      const validation = loginSchema.safeParse({...formData, captchaToken})
 
       if (!validation.success) {
         const fieldErrors: FormErrors = {}
@@ -69,11 +72,14 @@ export function LoginForm() {
       if (result.success) {
         router.push(result.data?.role === 'admin' ? '/admin' : '/landing')
       } else {
-        setErrors({ form: result.error || 'Login failed' })
+        setErrors({ form: result.error || 'Login failed' });
+        recaptchaRef.current?.reset();
+        setCaptchaToken(null);
       }
     } catch (error) {
       console.error('Login error:', error)
       setErrors({ form: 'An unexpected error occurred. Please try again.' })
+      recaptchaRef.current?.reset();
     } finally {
       setIsLoading(false)
     }
@@ -234,6 +240,14 @@ export function LoginForm() {
             </div>
           </div>
 
+          {/*CAPTCHA*/}
+          <div className="flex justify-center py-2">
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              onChange={(token) => setCaptchaToken(token)}
+            />
+          </div>
 
           <Button
             type="submit"

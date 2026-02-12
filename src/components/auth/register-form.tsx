@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { registerUser } from '@/app/actions/auth'
@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { AvatarUpload } from '@/components/patterns/p-file-upload-2'
 import type { FileWithPreview } from '@/hooks/use-file-upload'
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface FormData {
   firstName: string
@@ -45,6 +46,8 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isPhoneFocused, setIsPhoneFocused] = useState(false)
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const formatPHNumber = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 10)
     const parts = []
@@ -120,12 +123,17 @@ export function RegisterForm() {
       return
     }
 
+    if (!captchaToken) {
+      clientErrors.captchaToken = 'Please complete the CAPTCHA'
+    }
+
     setIsLoading(true)
 
     try {
       const validation = registerSchema.safeParse({
         ...formData,
         phoneNumber: '+63' + formData.phoneNumber,
+        captchaToken: captchaToken,
       })
 
       if (!validation.success) {
@@ -149,6 +157,7 @@ export function RegisterForm() {
       // data.append('username', formData.username)
       data.append('password', formData.password)
       data.append('confirmPassword', formData.confirmPassword)
+      data.append('captchaToken', captchaToken as string)
       if (formData.profilePhoto) {
         data.append('profilePhoto', formData.profilePhoto)
       }
@@ -159,10 +168,14 @@ export function RegisterForm() {
         router.push('/landing')
       } else {
         setErrors({ form: result.error || 'Registration failed' })
+        recaptchaRef.current?.reset()
+        setCaptchaToken(null)
       }
     } catch (error) {
       console.error('Registration error:', error)
       setErrors({ form: 'An unexpected error occurred. Please try again.' })
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
     } finally {
       setIsLoading(false)
     }
@@ -561,6 +574,24 @@ export function RegisterForm() {
               {errors.profilePhoto && (
                 <p className="text-xs text-destructive text-center">{errors.profilePhoto}</p>
               )}
+
+              {/*CAPTCHA*/}
+              <div className="flex flex-col items-center py-2 relative">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                  onChange={(token) => {
+                    setCaptchaToken(token)
+                    if (errors.captchaToken) setErrors({ ...errors, captchaToken: '' })
+                  }}
+                />
+                {errors.captchaToken && (
+                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.captchaToken}
+                  </p>
+                )}
+              </div>
 
               {/* Navigation Buttons */}
               <div className="flex gap-3 mt-6">

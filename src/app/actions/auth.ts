@@ -36,6 +36,22 @@ function sanitizeFilename(filename: string): string {
     .toLowerCase()
 }
 
+async function verifyCaptcha(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+
+  try {
+    const response = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+      { method: "POST" }
+    );
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error("CAPTCHA verification error:", error);
+    return false;
+  }
+}
+
 // Helper function to verify file content matches JPEG or PNG magic bytes
 async function validateFileSignature(file: File): Promise<boolean> {
   const buffer = await file.slice(0, 8).arrayBuffer()
@@ -64,6 +80,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       password: formData.get('password') as string,
       confirmPassword: formData.get('confirmPassword') as string,
       profilePhoto: formData.get('profilePhoto') as File,
+      captchaToken: formData.get('captchaToken') as string,
     }
 
     // 2. Validate with Zod
@@ -79,7 +96,13 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       };
     }
 
-    // 3. Verify file content matches declared image type
+    // 3. CAPTCHA Verification
+    const isHuman = await verifyCaptcha(validation.data.captchaToken);
+    if (!isHuman) {
+      return { success: false, error: 'CAPTCHA verification failed. Please try again.' };
+    }
+
+    // 4. Verify file content matches declared image type
     const isValidSignature = await validateFileSignature(validation.data.profilePhoto)
     if (!isValidSignature) {
       return { success: false, error: 'Invalid file: content does not match an image format' }
@@ -87,7 +110,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 
     const supabase = await createClient()
 
-    // 4. Sign up user with Supabase
+    // 5. Sign up user with Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validation.data.email,
       password: validation.data.password,
@@ -117,7 +140,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 
     const userId = authData.user.id
 
-    // 5. Upload profile photo to storage
+    // 6. Upload profile photo to storage
     const sanitizedFilename = sanitizeFilename(validation.data.profilePhoto.name)
     const fileName = `${userId}/${Date.now()}-${sanitizedFilename}`
 
@@ -135,12 +158,12 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       return { success: false, error: 'Failed to upload profile photo. Please try again.' }
     }
 
-    // 6. Get public URL
+    // 7. Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('profile-photos')
       .getPublicUrl(fileName)
 
-    // 7. Update profile with photo URL (profile already created by trigger)
+    // 8. Update profile with photo URL (profile already created by trigger)
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -153,7 +176,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
       return { success: false, error: 'Failed to update user profile' }
     }
 
-    // 8. Return success (user is auto-logged in by Supabase)
+    // 9. Return success (user is auto-logged in by Supabase)
     return { success: true, data: authData.user }
   } catch (error) {
     console.error('Unexpected error during registration:', error)
@@ -173,9 +196,15 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       }
     }
 
+    // 2. CAPTCHA Verification
+    const isHuman = await verifyCaptcha(validation.data.captchaToken);
+      if (!isHuman) {
+        return { success: false, error: 'CAPTCHA verification failed. Please try again.' };
+    }
+
     const supabase = await createClient()
 
-    // 2. Sign in with Supabase
+    // 3. Sign in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email: validation.data.email,
       password: validation.data.password,

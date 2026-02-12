@@ -146,7 +146,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
               <div className="relative w-full">
               <input
                 id="password"

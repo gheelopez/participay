@@ -86,10 +86,10 @@ export function RegisterForm() {
       clientErrors.password = 'Password is required'
     } else {
       const missing = []
-      if (formData.password.length < 8) missing.push('at least 8 characters')
-      if (!/[A-Z]/.test(formData.password)) missing.push('one uppercase letter')
-      if (!/\d/.test(formData.password)) missing.push('one number')
-      if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) missing.push('one special character')
+      if (formData.password.length < 8) missing.push('8+ characters')
+      if (!/[A-Z]/.test(formData.password)) missing.push('1 uppercase')
+      if (!/\d/.test(formData.password)) missing.push('1 number')
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) missing.push('1 special character')
       if (missing.length > 0) {
         clientErrors.password = `Password must contain ${missing.join(', ')}`
       }
@@ -191,11 +191,11 @@ export function RegisterForm() {
 
           {/* Step 1: Personal Details */}
           {currentStep === 1 && (
-            <div className="space-y-5 mt-10">
-              <p className="text-base text-gray-400 mb-3 ml-3">Personal Details</p>
+            <div className="space-y-1/2 mt-1">
+              <p className="text-sm text-gray-400 mb-3 ml-3">Personal Details</p>
 
               {/* First Name & Last Name */}
-              <div className={`grid grid-cols-2 gap-4 ${errors.firstName || errors.lastName ? 'pb-2' : ''}`}>
+              <div className="grid grid-cols-2 gap-4 pb-6">
                 {/* First Name */}
                 <div className="space-y-2">
                   <div className="relative w-full">
@@ -237,7 +237,8 @@ export function RegisterForm() {
                       First Name
                     </label>
                     {errors.firstName && (
-                      <p className="absolute -bottom-5 left-6 text-xs text-destructive">
+                      <p className="absolute flex items-center gap-1 -bottom-5 left-2 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
                         {errors.firstName}
                       </p>
                     )}
@@ -285,7 +286,8 @@ export function RegisterForm() {
                       Last Name
                     </label>
                     {errors.lastName && (
-                      <p className="absolute -bottom-5 left-6 text-xs text-destructive">
+                      <p className="absolute flex items-center gap-1 -bottom-5 left-2 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
                         {errors.lastName}
                       </p>
                     )}
@@ -294,7 +296,7 @@ export function RegisterForm() {
               </div>
 
               {/* Email */}
-              <div className={`space-y-2 ${errors.email ? 'pb-2' : ''}`}>
+              <div className="pb-6">
                 <div className="relative w-full">
                   <input
                     id="email"
@@ -334,15 +336,16 @@ export function RegisterForm() {
                     Email
                   </label>
                   {errors.email && (
-                    <p className="absolute -bottom-5 left-6 text-xs text-destructive">
-                      {errors.email}
+                    <p className="absolute flex items-center gap-1 -bottom-5 left-2 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.email}
                     </p>
                   )}
                 </div>
               </div>
 
               {/* Phone Number */}
-              <div className={`space-y-2 ${errors.phoneNumber ? 'pb-2' : ''}`}>
+              <div className="pb-6">
                 <div className="relative w-full">
                   <div
                     className={`
@@ -401,16 +404,17 @@ export function RegisterForm() {
                     Phone Number
                   </label>
                   {errors.phoneNumber && (
-                    <p className="absolute -bottom-5 left-6 text-xs text-destructive">
-                      {errors.phoneNumber}
+                    <p className="absolute flex items-center gap-1 -bottom-5 left-2 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.phoneNumber}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-1/2">
                 {/* Password */}
-                <div className="space-y-2">
+                <div>
                   <div className="relative w-full">
                     <input
                       id="password"
@@ -452,21 +456,25 @@ export function RegisterForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer transition-colors z-10 hover:text-gray-600"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer transition-colors z-10 hover:text-gray-600"
                       disabled={isLoading}
                     >
                       {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.password && (
-                    <p className="mt-1 ml-6 mr-2 text-xs text-destructive">
-                      {errors.password}
-                    </p>
-                  )}
+                  <div className="min-h-[1.25rem] mt-1">
+                    {errors.password && (
+                      <p className="ml-2 mr-2 flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.password}
+                        
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Confirm Password */}
-                <div className="space-y-2">
+                <div>
                   <div className="relative w-full">
                     <input
                       id="confirmPassword"
@@ -508,17 +516,20 @@ export function RegisterForm() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer transition-colors z-10 hover:text-gray-600"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer transition-colors z-10 hover:text-gray-600"
                       disabled={isLoading}
                     >
                       {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 ml-6 text-xs text-destructive">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
+                  <div className="min-h-[1.25rem] mt-1">
+                    {errors.confirmPassword && (
+                      <p className="ml-2 mr-2 flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.confirmPassword}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -528,7 +539,7 @@ export function RegisterForm() {
                   w-full
                   rounded-full
                   py-6
-                  mt-4
+                  mt-1
                   text-base
                   font-medium
                   bg-[#132660]
@@ -615,16 +626,18 @@ export function RegisterForm() {
           </p>
 
           {/* Step Indicator */}
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+          <div className="flex items-center justify-center gap-1.5 pt-0">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
               currentStep >= 1 ? 'bg-[#132660] text-white' : 'bg-gray-200 text-gray-500'
             }`}>
               1
             </div>
-            <div className={`h-0.5 w-12 transition-colors ${
+
+            <div className={`h-0.5 w-8 transition-colors ${
               currentStep >= 2 ? 'bg-[#132660]' : 'bg-gray-200'
             }`} />
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
               currentStep >= 2 ? 'bg-[#132660] text-white' : 'bg-gray-200 text-gray-500'
             }`}>
               2

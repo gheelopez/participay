@@ -72,7 +72,7 @@ function Navbar() {
                   asChild
                   className="rounded-full bg-[#132660] text-white hover:bg-[#0f1d4a] px-8 py-2 font-medium transition-all duration-200"
                 >
-                  <Link href="/signup">Sign Up</Link>
+                  <Link href="/register">Sign Up</Link>
                 </Button>
               </div>
             </div>

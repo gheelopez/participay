@@ -37,6 +37,19 @@ function sanitizeFilename(filename: string): string {
     .toLowerCase()
 }
 
+//Helper function to check if login requires CAPTCHA based on failed attempts
+export async function getLoginStatus(email: string): Promise<{ requiresCaptcha: boolean }> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('failed_attempts')
+    .eq('email', email)
+    .single()
+
+  return { requiresCaptcha: (data?.failed_attempts ?? 0) >= 3 }
+}
+
+// Helper function to verify CAPTCHA token with Google reCAPTCHA
 async function verifyCaptcha(token: string | undefined): Promise<boolean> {
   if (!token) return false;
 

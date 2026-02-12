@@ -4,6 +4,7 @@ import { useState, FormEvent, useRef} from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { loginUser } from '@/app/actions/auth'
+import { getLoginStatus } from '@/app/actions/auth'
 import { loginSchema } from '@/lib/validations/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +35,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [requiresCaptcha, setRequiresCaptcha] = useState(false)
   
   const handleInputChange = (field: keyof LoginFormData) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -42,6 +44,18 @@ export function LoginForm() {
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' })
+    }
+  }
+
+  const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const email = e.target.value
+    if (email) {
+      const { requiresCaptcha } = await getLoginStatus(email)
+      setRequiresCaptcha(requiresCaptcha)
+      
+      if (requiresCaptcha) {
+        setShowCaptcha(true)
+      }
     }
   }
 
@@ -73,8 +87,9 @@ export function LoginForm() {
       if (result.success) {
         router.push(result.data?.role === 'admin' ? '/admin' : '/landing')
       } else {
-        if(result.requiresCaptcha){
-          setShowCaptcha(true);
+        if (result.requiresCaptcha) {
+          setShowCaptcha(true)
+          setRequiresCaptcha(true)
         }
         setErrors({ form: result.error || 'Login failed' });
         recaptchaRef.current?.reset();
@@ -109,6 +124,7 @@ export function LoginForm() {
                 placeholder=" "
                 value={formData.email}
                 onChange={handleInputChange("email")}
+                onBlur={handleEmailBlur}
                 disabled={isLoading}
                 className={`
                   peer w-full
@@ -262,7 +278,7 @@ export function LoginForm() {
               </p>
             )}
           </div>
-        )}
+          )}
 
           <Button
             type="submit"

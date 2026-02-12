@@ -237,11 +237,8 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     if (error) {
       console.error('Login error:', error)
       //increment failed attempts
-      await supabase
-        .from('profiles')
-        .update({ failed_attempts: attempts + 1 } as any)
-        .eq('email', email);
-      return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 3 }
+      await (supabase as any).rpc('increment_failed_attempts', { user_email: email });
+      return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 4 }
     }
 
     if (!data.user) {
@@ -249,10 +246,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     }
 
     //reset failed attempts on successful login
-    await supabase
-      .from('profiles')
-      .update({ failed_attempts: 0 } as any)
-      .eq('id', data.user.id);
+    await (supabase as any).rpc('reset_failed_attempts', { user_id: data.user.id });
 
     // Fetch role from profile
     const { data: profile } = await supabase

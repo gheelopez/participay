@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { loginSchema } from "@/lib/validations/auth"; // Your Zod schema
+import { loginSchema } from "@/lib/validations/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerSchema, loginSchema } from '@/lib/validations/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 import type { LoginInput } from '@/lib/validations/auth'
 import type { AuthError } from '@supabase/supabase-js'
 
@@ -72,6 +73,12 @@ async function validateFileSignature(file: File): Promise<boolean> {
 // 1. REGISTER USER
 export async function registerUser(formData: FormData): Promise<ActionResponse<any>> {
   try {
+    // Rate limit: 5 attempts per hour per IP
+    const registerLimit = await checkRateLimit('register', 5, 3600)
+    if (!registerLimit.allowed) {
+      return { success: false, error: registerLimit.error }
+    }
+
     // 1. Extract data from FormData
     const data = {
       firstName: formData.get('firstName') as string,
@@ -188,6 +195,12 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 // 2. LOGIN USER
 export async function loginUser(input: LoginInput): Promise<ActionResponse<any>> {
   try {
+    // Rate limit: 10 attempts per 15 minutes per IP
+    const loginLimit = await checkRateLimit('login', 10, 900)
+    if (!loginLimit.allowed) {
+      return { success: false, error: loginLimit.error }
+    }
+
     // 1. Validate input
     const validation = loginSchema.safeParse(input)
     if (!validation.success) {

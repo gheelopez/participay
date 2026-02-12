@@ -258,28 +258,28 @@ const compensationCards = [
     icon: DollarSign,
     label: 'Monetary',
     desc: 'Cash payments, GCash, or bank transfers for your time and effort.',
-    iconBg: 'rgba(34,197,94,0.1)',
+    iconBg: 'white',
     iconColor: '#16a34a',
   },
   {
     icon: Utensils,
     label: 'Free Food',
     desc: 'Meals, snacks, or food vouchers provided as study incentives.',
-    iconBg: 'rgba(249,115,22,0.1)',
+    iconBg: 'white',
     iconColor: '#ea580c',
   },
   {
     icon: Gift,
     label: 'Incentives',
     desc: 'Gift cards, tokens, raffle entries, and other non-cash rewards.',
-    iconBg: 'rgba(168,85,247,0.1)',
+    iconBg: 'white',
     iconColor: '#9333ea',
   },
   {
     icon: GraduationCap,
     label: 'Academic',
     desc: 'Course credits, extra points, or research units for students.',
-    iconBg: 'rgba(19,38,96,0.1)',
+    iconBg: 'white',
     iconColor: '#132660',
   },
 ]
@@ -287,9 +287,9 @@ const compensationCards = [
 function CompensationSection() {
   const ref = useScrollAnimation()
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white rounded-4xl m-20">
       <div ref={ref} className="section-animate max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center leading-tight mb-4" style={{ color: '#132660' }}>
+        <h2 className="text-5xl font-bold text-center leading-tight mb-4" style={{ color: '#132660' }}>
           What You Might Earn
         </h2>
         <p className="text-center text-gray-500 mb-16 text-lg">
@@ -299,14 +299,14 @@ function CompensationSection() {
           {compensationCards.map((card, i) => (
             <div
               key={i}
-              className="rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 border-t-4"
+              className='text-center'
               style={{ borderTopColor: '#132660' }}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto"
                 style={{ backgroundColor: card.iconBg }}
               >
-                <card.icon className="w-6 h-6" style={{ color: card.iconColor }} />
+                <card.icon className="w-8 h-8" style={{ color: card.iconColor }} />
               </div>
               <h3 className="font-bold text-gray-900 leading-tight mb-2">{card.label}</h3>
               <p className="text-gray-500 text-sm">{card.desc}</p>

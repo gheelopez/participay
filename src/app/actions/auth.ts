@@ -131,7 +131,19 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 
     const supabase = await createClient()
 
-    // 5. Sign up user with Supabase
+    // 5. Check for duplicate phone number
+    const { data: existingPhone } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone_number', validation.data.phoneNumber)
+      .maybeSingle()
+
+    if (existingPhone) {
+      // Generic message — does not reveal that the phone number is already taken
+      return { success: false, error: 'Unable to create account. Please check your details or try logging in.' }
+    }
+
+    // 6. Sign up user with Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validation.data.email,
       password: validation.data.password,

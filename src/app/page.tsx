@@ -50,12 +50,12 @@ function Navbar() {
                 >
                   <h1>Browse</h1>
                 </Link>
-                <Link
+                {/*<Link
                   href="/profile"
                   className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-medium"
                 >
                   Profile
-                </Link>
+                </Link>*/}
               </div>
 
               {/* Auth Buttons */}

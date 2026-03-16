@@ -1,12 +1,22 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { createClient } from '@/lib/supabase/client'
+import { logoutUser } from '@/app/actions/auth'
 import {
   Search, Plus, BookOpen, FileText, ExternalLink,
   UserPlus, PenLine, Settings, Users, Link2, ToggleRight,
   Zap, Eye, ArrowRight, DollarSign, Utensils, Gift,
-  GraduationCap, Shield, Lock
+  GraduationCap, Shield, Lock, CircleUser, LogOut
 } from 'lucide-react'
 
 function useScrollAnimation() {
@@ -29,7 +39,7 @@ function useScrollAnimation() {
   return ref
 }
 
-function Navbar() {
+function Navbar({ isLoggedIn, profilePhotoUrl, onLogout }: { isLoggedIn: boolean; profilePhotoUrl: string | null; onLogout: () => void }) {
   return (
     <div className="sticky top-0 z-50 bg-transparent">
       <div className="px-8 py-6">
@@ -50,30 +60,68 @@ function Navbar() {
                 >
                   <h1>Browse</h1>
                 </Link>
-                {/*<Link
-                  href="/profile"
-                  className="text-gray-700 hover:text-[#132660] transition-colors duration-200 text-base font-medium"
-                >
-                  Profile
-                </Link>*/}
               </div>
 
               {/* Auth Buttons */}
               <div className="flex items-center gap-3">
-                <Button
-                  asChild
-                  variant="outline"
-                  className="rounded-full border-1 border-[#132660] bg-white text-[#132660] hover:bg-gray-50 px-8 py-2 font-medium transition-all duration-200"
-                >
-                  <Link href="/login">Log In</Link>
-                </Button>
+                {isLoggedIn ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="rounded-full w-10 h-10 overflow-hidden border-2 border-transparent hover:border-[#a5c4d4] transition-all duration-200 focus:outline-none">
+                        {profilePhotoUrl ? (
+                          <img
+                            src={profilePhotoUrl}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="w-full h-full flex items-center justify-center bg-gray-100 text-[#132660]">
+                            <CircleUser className="w-6 h-6" />
+                          </span>
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52 rounded-2xl shadow-lg mt-2">
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=post-study" className="flex items-center gap-2 cursor-pointer">
+                          <PenLine className="w-4 h-4" />
+                          Post a Study
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=profile" className="flex items-center gap-2 cursor-pointer">
+                          <Settings className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={onLogout}
+                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="rounded-full border-1 border-[#132660] bg-white text-[#132660] hover:bg-gray-50 px-8 py-2 font-medium transition-all duration-200"
+                    >
+                      <Link href="/login">Log In</Link>
+                    </Button>
 
-                <Button
-                  asChild
-                  className="rounded-full bg-[#132660] text-white hover:bg-[#0f1d4a] px-8 py-2 font-medium transition-all duration-200"
-                >
-                  <Link href="/register">Sign Up</Link>
-                </Button>
+                    <Button
+                      asChild
+                      className="rounded-full bg-[#132660] text-white hover:bg-[#0f1d4a] px-8 py-2 font-medium transition-all duration-200"
+                    >
+                      <Link href="/register">Sign Up</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -83,7 +131,7 @@ function Navbar() {
   )
 }
 
-function HeroSection() {
+function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <section className="py-55 text-center" style={{ backgroundColor: '#F4F4F4' }}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both max-w-4xl mx-auto px-2">
@@ -112,9 +160,11 @@ function HeroSection() {
             </Link>
           </Button>
         </div>
-        <p className="mt-4 text-sm" style={{ color: '#132660', opacity: '0.5'}}>
-          No registration required to browse.
-        </p>
+        {!isLoggedIn && (
+          <p className="mt-4 text-sm" style={{ color: '#132660', opacity: '0.5'}}>
+            No registration required to browse.
+          </p>
+        )}
       </div>
     </section>
   )
@@ -390,10 +440,56 @@ function Footer() {
 }
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setIsLoggedIn(true)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('profile_photo_url')
+          .eq('id', user.id)
+          .single()
+        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
+      }
+    }
+
+    loadUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setIsLoggedIn(true)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('profile_photo_url')
+          .eq('id', session.user.id)
+          .single()
+        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
+      } else {
+        setIsLoggedIn(false)
+        setProfilePhotoUrl(null)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
+    await logoutUser()
+    setIsLoggedIn(false)
+    setProfilePhotoUrl(null)
+    router.refresh()
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F4F4]">
-      <Navbar />
-      <HeroSection />
+      <Navbar isLoggedIn={isLoggedIn} profilePhotoUrl={profilePhotoUrl} onLogout={handleLogout} />
+      <HeroSection isLoggedIn={isLoggedIn} />
       <HowItWorksSection />
       <WhyUsSection />
       <CompensationSection />

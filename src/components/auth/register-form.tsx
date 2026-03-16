@@ -165,7 +165,7 @@ export function RegisterForm() {
       const result = await registerUser(data)
 
       if (result.success) {
-        router.push('/landing')
+        router.push('/')
       } else {
         setErrors({ form: result.error || 'Registration failed' })
         recaptchaRef.current?.reset()

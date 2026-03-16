@@ -61,6 +61,17 @@ export const loginSchema = z.object({
     .optional(),
 })
 
+// Schema for profile update
+export const updateProfileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(50, 'First name is too long'),
+  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name is too long'),
+  phoneNumber: z.string()
+    .length(13, 'Phone number must be exactly 10 digits after +63')
+    .regex(phoneRegex, 'Invalid Philippine number format'),
+  school: z.string().min(1, 'School is required').max(100, 'School name is too long'),
+})
+
 // Export types
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>

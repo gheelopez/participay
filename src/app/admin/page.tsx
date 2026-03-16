@@ -16,7 +16,7 @@ export default async function AdminPage() {
   const profile = result.data.profile
 
   if (profile?.role !== 'admin') {
-    redirect('/landing')
+    redirect('/')
   }
 
   async function handleLogout() {

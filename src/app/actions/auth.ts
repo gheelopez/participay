@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { registerSchema, loginSchema } from '@/lib/validations/auth'
+import { registerSchema, loginSchema, updateProfileSchema } from '@/lib/validations/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
 import type { LoginInput } from '@/lib/validations/auth'
 import type { AuthError } from '@supabase/supabase-js'
@@ -68,7 +68,7 @@ async function verifyCaptcha(token: string | undefined): Promise<boolean> {
 }
 
 // Helper function to verify file content matches JPEG or PNG magic bytes
-async function validateFileSignature(file: File): Promise<boolean> {
+export async function validateFileSignature(file: File): Promise<boolean> {
   const buffer = await file.slice(0, 8).arrayBuffer()
   const bytes = new Uint8Array(buffer)
 
@@ -349,6 +349,125 @@ export async function getCurrentUser(): Promise<ActionResponse<any>> {
     return { success: true, data: { ...user, profile } }
   } catch (error) {
     console.error('Unexpected error getting user:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+// 5. UPDATE PROFILE
+export async function updateProfile(formData: FormData): Promise<ActionResponse> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    const data = {
+      firstName: formData.get('firstName') as string,
+      lastName: formData.get('lastName') as string,
+      phoneNumber: formData.get('phoneNumber') as string,
+      school: formData.get('school') as string,
+    }
+
+    const validation = updateProfileSchema.safeParse(data)
+    if (!validation.success) {
+      const firstError = Object.values(validation.error.flatten().fieldErrors).flat()[0]
+      return { success: false, error: firstError || 'Validation failed' }
+    }
+
+    // Check phone uniqueness, excluding the current user
+    const { data: existingPhone } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone_number', validation.data.phoneNumber)
+      .neq('id', user.id)
+      .maybeSingle()
+
+    if (existingPhone) {
+      return { success: false, error: 'Phone number is already in use' }
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        first_name: validation.data.firstName,
+        last_name: validation.data.lastName,
+        phone_number: validation.data.phoneNumber,
+        school: validation.data.school,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('Profile update error:', updateError)
+      return { success: false, error: 'Failed to update profile' }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Unexpected error updating profile:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+// 6. UPDATE PROFILE PHOTO
+export async function updateProfilePhoto(formData: FormData): Promise<ActionResponse<{ photoUrl: string }>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    const file = formData.get('profilePhoto') as File
+    if (!file || file.size === 0) {
+      return { success: false, error: 'No file provided' }
+    }
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      return { success: false, error: 'File size must be less than 5MB' }
+    }
+
+    const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      return { success: false, error: 'Only JPEG and PNG images are accepted' }
+    }
+
+    const isValidSignature = await validateFileSignature(file)
+    if (!isValidSignature) {
+      return { success: false, error: 'Invalid file: content does not match an image format' }
+    }
+
+    const sanitizedFilename = sanitizeFilename(file.name)
+    const fileName = `${user.id}/${Date.now()}-${sanitizedFilename}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(fileName, file, { cacheControl: '3600', upsert: true })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      return { success: false, error: 'Failed to upload photo. Please try again.' }
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(fileName)
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ profile_photo_url: publicUrl, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+
+    if (profileError) {
+      console.error('Profile photo update error:', profileError)
+      return { success: false, error: 'Failed to update profile photo' }
+    }
+
+    return { success: true, data: { photoUrl: publicUrl } }
+  } catch (error) {
+    console.error('Unexpected error updating profile photo:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }

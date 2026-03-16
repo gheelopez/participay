@@ -29,11 +29,11 @@ export async function proxy(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/landing', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   // Redirect unauthenticated users away from protected pages
-  if (!user && (pathname === '/landing' || pathname.startsWith('/admin'))) {
+  if (!user && (pathname.startsWith('/admin') || pathname.startsWith('/account'))) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
     const profile = data as { role: 'user' | 'admin' } | null
 
     if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/landing', request.url))
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 

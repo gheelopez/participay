@@ -9,6 +9,8 @@ export const createResearchPostSchema = z.object({
     error: 'Invalid compensation type'
   }),
   compensation_details: z.string().max(500, 'Compensation details are too long').optional().nullable(),
+  compensation_amount: z.number().int('Must be a whole number').min(0, 'Amount cannot be negative').optional().nullable(),
+  participants_needed: z.number().int('Must be a whole number').min(1, 'At least 1 participant is required'),
 })
 
 // Schema for updating a research post
@@ -18,6 +20,8 @@ export const updateResearchPostSchema = z.object({
   registration_link: z.url().optional(),
   compensation_type: z.enum(['food', 'money', 'both', 'none']).optional(),
   compensation_details: z.string().max(500).optional().nullable(),
+  compensation_amount: z.number().int().min(0).optional().nullable(),
+  participants_needed: z.number().int().min(1).optional(),
   is_open: z.boolean().optional(),
 })
 

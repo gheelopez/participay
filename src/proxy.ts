@@ -30,17 +30,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user, session } } = await supabase.auth.getUser().then(
-    async (userResult) => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      return {
-        data: {
-          user: userResult.data.user,
-          session: sessionData.session,
-        },
-      }
-    }
-  )
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
 
   // Session timeout check
   if (user && session?.expires_at) {

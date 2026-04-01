@@ -1,6 +1,6 @@
 type LogLevel = 'INFO' | 'WARN' | 'ERROR'
 
-type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM'
+type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM' | 'TRANSACTION'
 
 interface LogEntry {
   timestamp: string

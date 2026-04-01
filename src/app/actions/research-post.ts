@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { createResearchPostSchema, updateResearchPostSchema } from '@/lib/validations/research-post'
+import { logger } from '@/lib/logger'
 import type { CreateResearchPostInput, UpdateResearchPostInput } from '@/lib/validations/research-post'
 
 // Type for our response
@@ -135,9 +136,11 @@ export async function createResearchPost(input: CreateResearchPostInput): Promis
       .single()
 
     if (error) {
-      console.error('Error creating post:', error)
+      logger.error('TRANSACTION', 'study_create_failed', { userId: user.id, details: { error: error.message } })
       return { success: false, error: 'Failed to create post' }
     }
+
+    logger.info('TRANSACTION', 'study_created', { userId: user.id, details: { postId: data.id, title: data.title } })
 
     // Revalidate the home page and dashboard to show new post
     revalidatePath('/')
@@ -145,7 +148,7 @@ export async function createResearchPost(input: CreateResearchPostInput): Promis
 
     return { success: true, data }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    logger.error('TRANSACTION', 'study_create_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -183,15 +186,17 @@ export async function updateResearchPost(
       .single()
 
     if (error) {
-      console.error('Error updating post:', error)
-      
+      logger.error('TRANSACTION', 'study_edit_failed', { userId: user.id, details: { postId: id, error: error.message } })
+
       // Check if it's a permission error
       if (error.code === 'PGRST116') {
         return { success: false, error: 'You do not have permission to update this post' }
       }
-      
+
       return { success: false, error: 'Failed to update post' }
     }
+
+    logger.info('TRANSACTION', 'study_edited', { userId: user.id, details: { postId: id } })
 
     // Revalidate pages
     revalidatePath('/')
@@ -199,7 +204,7 @@ export async function updateResearchPost(
 
     return { success: true, data }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    logger.error('TRANSACTION', 'study_edit_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -211,7 +216,7 @@ export async function deleteResearchPost(id: string): Promise<ActionResponse> {
 
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return { success: false, error: 'You must be logged in' }
     }
@@ -223,15 +228,17 @@ export async function deleteResearchPost(id: string): Promise<ActionResponse> {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting post:', error)
-      
+      logger.error('TRANSACTION', 'study_delete_failed', { userId: user.id, details: { postId: id, error: error.message } })
+
       // Check if it's a permission error
       if (error.code === 'PGRST116') {
         return { success: false, error: 'You do not have permission to delete this post' }
       }
-      
+
       return { success: false, error: 'Failed to delete post' }
     }
+
+    logger.info('TRANSACTION', 'study_deleted', { userId: user.id, details: { postId: id } })
 
     // Revalidate pages
     revalidatePath('/')
@@ -239,7 +246,7 @@ export async function deleteResearchPost(id: string): Promise<ActionResponse> {
 
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    logger.error('TRANSACTION', 'study_delete_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -251,7 +258,7 @@ export async function togglePostStatus(id: string, isOpen: boolean): Promise<Act
 
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return { success: false, error: 'You must be logged in' }
     }
@@ -265,14 +272,16 @@ export async function togglePostStatus(id: string, isOpen: boolean): Promise<Act
       .single()
 
     if (error) {
-      console.error('Error toggling status:', error)
-      
+      logger.error('TRANSACTION', 'study_toggle_failed', { userId: user.id, details: { postId: id, error: error.message } })
+
       if (error.code === 'PGRST116') {
         return { success: false, error: 'You do not have permission to update this post' }
       }
-      
+
       return { success: false, error: 'Failed to update post status' }
     }
+
+    logger.info('TRANSACTION', 'study_toggled', { userId: user.id, details: { postId: id, isOpen } })
 
     // Revalidate pages
     revalidatePath('/')
@@ -280,7 +289,7 @@ export async function togglePostStatus(id: string, isOpen: boolean): Promise<Act
 
     return { success: true, data }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    logger.error('TRANSACTION', 'study_toggle_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }

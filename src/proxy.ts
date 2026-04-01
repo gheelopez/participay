@@ -3,6 +3,11 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
 
+const SESSION_TIMEOUT_MINUTES = parseInt(
+  process.env.SESSION_TIMEOUT_MINUTES || '30',
+  10
+)
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -25,7 +30,35 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user, session } } = await supabase.auth.getUser().then(
+    async (userResult) => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      return {
+        data: {
+          user: userResult.data.user,
+          session: sessionData.session,
+        },
+      }
+    }
+  )
+
+  // Session timeout check
+  if (user && session?.expires_at) {
+    const now = Date.now()
+    const timeoutMs = SESSION_TIMEOUT_MINUTES * 60 * 1000
+    // Supabase default expiry is 1hr from issue, so issued_at ≈ expires_at - 3600
+    const issuedAt = (session.expires_at - 3600) * 1000
+    const sessionAge = now - issuedAt
+    if (sessionAge > timeoutMs) {
+      console.log(
+        `[${new Date().toISOString()}] [INFO] [AUTH] session_timeout user=${user.id}`
+      )
+      await supabase.auth.signOut()
+      return NextResponse.redirect(
+        new URL('/login?reason=timeout', request.url)
+      )
+    }
+  }
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/register')) {

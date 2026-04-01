@@ -22,6 +22,7 @@ export interface Database {
           updated_at: string
           role: 'user' | 'admin'
           failed_attempts: number
+          is_banned: boolean
         }
         Insert: {
           id: string
@@ -32,6 +33,7 @@ export interface Database {
           school?: string | null
           profile_photo_url?: string | null
           role?: 'user' | 'admin'
+          is_banned?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -44,6 +46,7 @@ export interface Database {
           school?: string | null
           profile_photo_url?: string | null
           role?: 'user' | 'admin'
+          is_banned?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -58,6 +61,8 @@ export interface Database {
           registration_link: string
           compensation_type: 'food' | 'money' | 'both' | 'none'
           compensation_details: string | null
+          compensation_amount: number | null
+          participants_needed: number | null
           is_open: boolean
           created_at: string
           updated_at: string
@@ -70,6 +75,8 @@ export interface Database {
           registration_link: string
           compensation_type: 'food' | 'money' | 'both' | 'none'
           compensation_details?: string | null
+          compensation_amount?: number | null
+          participants_needed?: number | null
           is_open?: boolean
           created_at?: string
           updated_at?: string
@@ -82,6 +89,8 @@ export interface Database {
           registration_link?: string
           compensation_type?: 'food' | 'money' | 'both' | 'none'
           compensation_details?: string | null
+          compensation_amount?: number | null
+          participants_needed?: number | null
           is_open?: boolean
           created_at?: string
           updated_at?: string

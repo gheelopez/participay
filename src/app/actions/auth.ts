@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerSchema, loginSchema, updateProfileSchema } from '@/lib/validations/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 import type { LoginInput } from '@/lib/validations/auth'
 import type { AuthError } from '@supabase/supabase-js'
 
@@ -210,9 +211,10 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
     }
 
     // 9. Return success (user is auto-logged in by Supabase)
+    logger.info('AUTH', 'register_success', { userId, email: validation.data.email })
     return { success: true, data: authData.user }
   } catch (error) {
-    console.error('Unexpected error during registration:', error)
+    logger.error('AUTH', 'register_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred. Please try again.' }
   }
 }
@@ -237,15 +239,21 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
 
     const supabase = await createClient()
 
-    // 2. get failure count from db
+    // 2. get failure count and ban status from db
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('failed_attempts')
+      .select('failed_attempts, is_banned')
       .eq('email', validation.data.email)
       .single();
 
     const {email, password, captchaToken} = validation.data;
     const attempts = (profileData as any)?.failed_attempts || 0;
+
+    // 2b. Ban enforcement — block banned users with a generic error
+    if ((profileData as any)?.is_banned) {
+      logger.warn('SECURITY', 'login_blocked_banned', { email })
+      return { success: false, error: 'Incorrect email or password' }
+    }
 
     // 3. captcha verification after 3 failed attempts
     if (attempts >= 3) {
@@ -273,7 +281,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     })
 
     if (error) {
-      console.error('Login error:', error)
+      logger.warn('AUTH', 'login_failure', { email, details: { attemptCount: attempts + 1 } })
       //increment failed attempts
       await (supabase as any).rpc('increment_failed_attempts', { user_email: email });
       return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 3 }
@@ -293,9 +301,10 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       .eq('id', data.user.id)
       .single()
 
+    logger.info('AUTH', 'login_success', { userId: data.user.id, email })
     return { success: true, data: { user: data.user, role: (profile as any)?.role ?? 'user' } }
   } catch (error) {
-    console.error('Unexpected error during login:', error)
+    logger.error('AUTH', 'login_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred. Please try again.' }
   }
 }
@@ -305,16 +314,18 @@ export async function logoutUser(): Promise<ActionResponse> {
   try {
     const supabase = await createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.auth.signOut()
 
     if (error) {
-      console.error('Logout error:', error)
+      logger.error('AUTH', 'logout_error', { userId: user?.id, details: { error: error.message } })
       return { success: false, error: 'Failed to logout' }
     }
 
+    logger.info('AUTH', 'logout', { userId: user?.id })
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error during logout:', error)
+    logger.error('AUTH', 'logout_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Toaster } from "sonner";
+import { SessionManager } from "@/components/SessionManager";
 import "./globals.css";
 
 const fontSF = localFont({
@@ -33,6 +35,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${fontSF.className} antialiased`}>
         {children}
+        <Toaster position="top-right" richColors />
+        <SessionManager />
       </body>
     </html>
   );

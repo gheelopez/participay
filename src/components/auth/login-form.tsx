@@ -85,7 +85,9 @@ export function LoginForm() {
       const result = await loginUser(validation.data)
 
       if (result.success) {
-        router.push(result.data?.role === 'admin' ? '/admin' : '/')
+        const dest = result.data?.role === 'admin' ? '/admin' : '/'
+        router.refresh()
+        router.push(dest)
       } else {
         if (result.requiresCaptcha) {
           setShowCaptcha(true)

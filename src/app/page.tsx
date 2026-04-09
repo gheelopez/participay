@@ -1,10 +1,7 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
-import { logoutUser } from '@/app/actions/auth'
 import {
   Search, Plus, BookOpen, FileText, ExternalLink,
   UserPlus, PenLine, Settings, Users, Link2, ToggleRight,
@@ -12,6 +9,7 @@ import {
   GraduationCap, Shield, Lock,
 } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
+import { useAuthNavbar } from '@/hooks/use-auth-navbar'
 
 function useScrollAnimation() {
   const ref = useRef<HTMLDivElement>(null)
@@ -93,7 +91,6 @@ function HowItWorksSection() {
           How It Works
         </h2>
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Participants column */}
           <div style={{ transitionDelay: '0.1s' }}>
             <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-400" style={{ color: '#F4F4F4' }}>
               For Participants
@@ -102,7 +99,7 @@ function HowItWorksSection() {
               {participantSteps.map((step, i) => (
                 <div key={i} className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#132660' }}>
-                    <step.icon   strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
+                    <step.icon strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
                   </div>
                   <div>
                     <p className="font-medium text-[#F4F4F4]">{step.label}</p>
@@ -112,7 +109,6 @@ function HowItWorksSection() {
               ))}
             </div>
           </div>
-          {/* Researchers column */}
           <div style={{ transitionDelay: '0.2s' }}>
             <h3 className="text-2xl font-bold leading-tight mb-6 pb-4 border-b border-gray-400" style={{ color: '#F4F4F4' }}>
               For Researchers
@@ -121,7 +117,7 @@ function HowItWorksSection() {
               {researcherSteps.map((step, i) => (
                 <div key={i} className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
-                    <step.icon   strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
+                    <step.icon strokeWidth={1} className="w-5 h-5" style={{ color: '#F4F4F4' }} />
                   </div>
                   <div>
                     <p className="font-medium text-[#F4F4F4]">{step.label}</p>
@@ -160,16 +156,12 @@ function WhyUsSection() {
         </h2>
         <p className="text-center text-gray-500 mb-16 text-lg">Built for both sides of research.</p>
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Researcher benefits */}
           <div>
             <h3 className="text-xl font-bold leading-tight mb-6" style={{ color: '#132660' }}>For Researchers</h3>
             <div className="flex flex-col gap-4">
               {researcherBenefits.map((b, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '' }}>
+                <div key={i} className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center">
                     <b.icon className="w-5 h-5" style={{ color: '#132660' }} />
                   </div>
                   <div>
@@ -180,15 +172,12 @@ function WhyUsSection() {
               ))}
             </div>
           </div>
-          {/* Participant benefits */}
           <div>
             <h3 className="text-xl font-bold leading-tight mb-6" style={{ color: '#132660' }}>For Participants</h3>
             <div className="flex flex-col gap-4">
               {participantBenefits.map((b, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '' }}>
+                <div key={i} className="bg-white rounded-3xl p-5 border border-[#132660] shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center">
                     <b.icon className="w-5 h-5" style={{ color: '#132660' }} />
                   </div>
                   <div>
@@ -206,34 +195,10 @@ function WhyUsSection() {
 }
 
 const compensationCards = [
-  {
-    icon: DollarSign,
-    label: 'Monetary',
-    desc: 'Cash payments, GCash, or bank transfers for your time and effort.',
-    iconBg: 'white',
-    iconColor: '#16a34a',
-  },
-  {
-    icon: Utensils,
-    label: 'Free Food',
-    desc: 'Meals, snacks, or food vouchers provided as study incentives.',
-    iconBg: 'white',
-    iconColor: '#ea580c',
-  },
-  {
-    icon: Gift,
-    label: 'Incentives',
-    desc: 'Gift cards, tokens, raffle entries, and other non-cash rewards.',
-    iconBg: 'white',
-    iconColor: '#9333ea',
-  },
-  {
-    icon: GraduationCap,
-    label: 'Academic',
-    desc: 'Course credits, extra points, or research units for students.',
-    iconBg: 'white',
-    iconColor: '#132660',
-  },
+  { icon: DollarSign, label: 'Monetary', desc: 'Cash payments, GCash, or bank transfers for your time and effort.', iconColor: '#16a34a' },
+  { icon: Utensils, label: 'Free Food', desc: 'Meals, snacks, or food vouchers provided as study incentives.', iconColor: '#ea580c' },
+  { icon: Gift, label: 'Incentives', desc: 'Gift cards, tokens, raffle entries, and other non-cash rewards.', iconColor: '#9333ea' },
+  { icon: GraduationCap, label: 'Academic', desc: 'Course credits, extra points, or research units for students.', iconColor: '#132660' },
 ]
 
 function CompensationSection() {
@@ -249,15 +214,8 @@ function CompensationSection() {
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {compensationCards.map((card, i) => (
-            <div
-              key={i}
-              className='text-center'
-              style={{ borderTopColor: '#132660' }}
-            >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto"
-                style={{ backgroundColor: card.iconBg }}
-              >
+            <div key={i} className="text-center">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto bg-white">
                 <card.icon className="w-8 h-8" style={{ color: card.iconColor }} />
               </div>
               <h3 className="font-bold text-gray-900 leading-tight mb-2">{card.label}</h3>
@@ -283,7 +241,7 @@ function TrustSection() {
         </p>
         <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           <div className="rounded-2xl p-6 border text-left hover:bg-white/15 transition-all duration-300" style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <h3 className="font-bold text-white leading-tight mb-2">No Data Collection</h3>
@@ -292,7 +250,7 @@ function TrustSection() {
             </p>
           </div>
           <div className="rounded-2xl p-6 border text-left hover:bg-white/15 transition-all duration-300" style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4">
               <Lock className="w-6 h-6 text-white" />
             </div>
             <h3 className="font-bold text-white leading-tight mb-2">Transparent Process</h3>
@@ -309,7 +267,7 @@ function TrustSection() {
 function Footer() {
   return (
     <footer className="py-20" style={{ backgroundColor: '#1E1E1E' }}>
-      <div className=" mx-10 px-2">
+      <div className="mx-10 px-2">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8 mt-10">
           <div>
             <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: '#f4f4f4' }}>
@@ -342,51 +300,7 @@ function Footer() {
 }
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setIsLoggedIn(true)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('profile_photo_url')
-          .eq('id', user.id)
-          .single()
-        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
-      }
-    }
-
-    loadUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setIsLoggedIn(true)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('profile_photo_url')
-          .eq('id', session.user.id)
-          .single()
-        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
-      } else {
-        setIsLoggedIn(false)
-        setProfilePhotoUrl(null)
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const handleLogout = async () => {
-    await logoutUser()
-    setIsLoggedIn(false)
-    setProfilePhotoUrl(null)
-    router.refresh()
-  }
+  const { isLoggedIn, profilePhotoUrl, handleLogout } = useAuthNavbar()
 
   return (
     <div className="min-h-screen bg-[#F4F4F4]">

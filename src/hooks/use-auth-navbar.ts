@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logoutUser } from '@/app/actions/auth'
 
@@ -9,6 +9,7 @@ export function useAuthNavbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const supabase = createClient()
@@ -18,14 +19,15 @@ export function useAuthNavbar() {
 
       if (user) {
         setIsLoggedIn(true)
-
         const { data: profile } = await supabase
           .from('profiles')
           .select('profile_photo_url')
           .eq('id', user.id)
           .single()
-
         setProfilePhotoUrl(profile?.profile_photo_url ?? null)
+      } else {
+        setIsLoggedIn(false)
+        setProfilePhotoUrl(null)
       }
     }
 
@@ -34,13 +36,11 @@ export function useAuthNavbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setIsLoggedIn(true)
-
         const { data: profile } = await supabase
           .from('profiles')
           .select('profile_photo_url')
           .eq('id', session.user.id)
           .single()
-
         setProfilePhotoUrl(profile?.profile_photo_url ?? null)
       } else {
         setIsLoggedIn(false)
@@ -59,7 +59,7 @@ export function useAuthNavbar() {
       subscription.unsubscribe()
       window.removeEventListener('profile-photo-updated', handleProfilePhotoUpdated)
     }
-  }, [])
+  }, [pathname]) // 👈 re-run loadUser whenever the route changes
 
   const handleLogout = async () => {
     await logoutUser()

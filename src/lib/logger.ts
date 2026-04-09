@@ -1,9 +1,11 @@
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
+import dgram from 'dgram'
 
-type LogLevel = 'INFO' | 'WARN' | 'ERROR'
+export type LogLevel = 'INFO' | 'WARN' | 'ERROR'
 
-type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM' | 'TRANSACTION' | 'ADMIN'
+export type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM' | 'TRANSACTION' | 'ADMIN'
 
 interface LogEntry {
   timestamp: string
@@ -16,8 +18,16 @@ interface LogEntry {
   details?: Record<string, unknown>
 }
 
-const LOG_DIR = path.join(process.cwd(), 'logs')
+type LogMeta = Omit<LogEntry, 'timestamp' | 'level' | 'category' | 'event'>
+
+const LOG_DIR = path.resolve(process.cwd(), 'logs')
 const LOG_FILE = path.join(LOG_DIR, 'app.log')
+
+const SEVERITY_MAP: Record<LogLevel, number> = {
+  INFO: 6,
+  WARN: 4,
+  ERROR: 3,
+}
 
 function ensureLogDir() {
   try {
@@ -38,6 +48,34 @@ function writeToFile(message: string) {
   }
 }
 
+function sendToSyslog(level: LogLevel, message: string, timestamp: string): void {
+  if (process.env.SYSLOG_ENABLED !== 'true') return
+
+  const host = process.env.SYSLOG_HOST
+  if (!host) return
+
+  const port = parseInt(process.env.SYSLOG_PORT || '514', 10)
+  const appName = process.env.SYSLOG_APP_NAME || 'participay'
+
+  try {
+    const facility = 1 // user-level
+    const severity = SEVERITY_MAP[level]
+    const priority = facility * 8 + severity
+    const hostname = os.hostname()
+    const pid = process.pid
+
+    const syslogMessage = `<${priority}>1 ${timestamp} ${hostname} ${appName} ${pid} - - ${message}`
+    const buffer = Buffer.from(syslogMessage)
+
+    const client = dgram.createSocket('udp4')
+    client.send(buffer, 0, buffer.length, port, host, () => {
+      client.close()
+    })
+  } catch {
+    // Silently swallow all syslog errors
+  }
+}
+
 function formatEntry(entry: LogEntry): string {
   const parts = [
     `[${entry.timestamp}]`,
@@ -52,11 +90,11 @@ function formatEntry(entry: LogEntry): string {
   return parts.join(' ')
 }
 
-function log(
+function writeLog(
   level: LogLevel,
   category: LogCategory,
   event: string,
-  meta?: Omit<LogEntry, 'timestamp' | 'level' | 'category' | 'event'>
+  meta?: LogMeta
 ) {
   const entry: LogEntry = {
     timestamp: new Date().toISOString(),
@@ -68,10 +106,8 @@ function log(
 
   const message = formatEntry(entry)
 
-  // Write to file
   writeToFile(message)
 
-  // Write to console
   switch (level) {
     case 'ERROR':
       console.error(message)
@@ -82,13 +118,25 @@ function log(
     default:
       console.log(message)
   }
+
+  sendToSyslog(level, `[${category}] ${event}`, entry.timestamp)
+}
+
+// Legacy functional API — used by src/lib/error-handler.ts
+export function log(
+  level: LogLevel,
+  category: LogCategory,
+  message: string,
+  metadata?: Record<string, unknown>
+): void {
+  writeLog(level, category, message, metadata ? { details: metadata } : undefined)
 }
 
 export const logger = {
-  info: (category: LogCategory, event: string, meta?: Omit<LogEntry, 'timestamp' | 'level' | 'category' | 'event'>) =>
-    log('INFO', category, event, meta),
-  warn: (category: LogCategory, event: string, meta?: Omit<LogEntry, 'timestamp' | 'level' | 'category' | 'event'>) =>
-    log('WARN', category, event, meta),
-  error: (category: LogCategory, event: string, meta?: Omit<LogEntry, 'timestamp' | 'level' | 'category' | 'event'>) =>
-    log('ERROR', category, event, meta),
+  info: (category: LogCategory, event: string, meta?: LogMeta) =>
+    writeLog('INFO', category, event, meta),
+  warn: (category: LogCategory, event: string, meta?: LogMeta) =>
+    writeLog('WARN', category, event, meta),
+  error: (category: LogCategory, event: string, meta?: LogMeta) =>
+    writeLog('ERROR', category, event, meta),
 }

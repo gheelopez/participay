@@ -10,22 +10,16 @@ export function useAuthNavbar() {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-
+  
   useEffect(() => {
     const supabase = createClient()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setIsLoggedIn(true)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('profile_photo_url')
-          .eq('id', session.user.id)
-          .single()
-        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
         setIsLoggedIn(false)
         setProfilePhotoUrl(null)
+      } else {
+        setIsLoggedIn(true)
       }
     })
 

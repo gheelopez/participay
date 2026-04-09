@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerSchema, loginSchema, updateProfileSchema } from '@/lib/validations/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 import type { LoginInput } from '@/lib/validations/auth'
 import type { AuthError } from '@supabase/supabase-js'
 
@@ -210,9 +211,10 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
     }
 
     // 9. Return success (user is auto-logged in by Supabase)
+    logger.info('AUTH', 'register_success', { userId, email: validation.data.email })
     return { success: true, data: authData.user }
   } catch (error) {
-    console.error('Unexpected error during registration:', error)
+    logger.error('AUTH', 'register_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred. Please try again.' }
   }
 }
@@ -237,10 +239,10 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
 
     const supabase = await createClient()
 
-    // 2. get failure count from db
+    // 2. get failure count and ban status from db
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('failed_attempts')
+      .select('failed_attempts, is_banned')
       .eq('email', validation.data.email)
       .single();
 
@@ -273,7 +275,7 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     })
 
     if (error) {
-      console.error('Login error:', error)
+      logger.warn('AUTH', 'login_failure', { email, details: { attemptCount: attempts + 1 } })
       //increment failed attempts
       await (supabase as any).rpc('increment_failed_attempts', { user_email: email });
       return { success: false, error: mapAuthError(error), requiresCaptcha: (attempts + 1) >= 3 }
@@ -281,6 +283,13 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
 
     if (!data.user) {
       return { success: false, error: 'Login failed' }
+    }
+
+    // 4b. Ban enforcement — only after credentials are verified correct
+    if ((profileData as any)?.is_banned) {
+      logger.warn('SECURITY', 'login_blocked_banned', { email, userId: data.user.id })
+      await supabase.auth.signOut()
+      return { success: false, error: 'This account has been suspended.' }
     }
 
     //reset failed attempts on successful login
@@ -293,9 +302,10 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
       .eq('id', data.user.id)
       .single()
 
+    logger.info('AUTH', 'login_success', { userId: data.user.id, email })
     return { success: true, data: { user: data.user, role: (profile as any)?.role ?? 'user' } }
   } catch (error) {
-    console.error('Unexpected error during login:', error)
+    logger.error('AUTH', 'login_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred. Please try again.' }
   }
 }
@@ -305,16 +315,18 @@ export async function logoutUser(): Promise<ActionResponse> {
   try {
     const supabase = await createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.auth.signOut()
 
     if (error) {
-      console.error('Logout error:', error)
+      logger.error('AUTH', 'logout_error', { userId: user?.id, details: { error: error.message } })
       return { success: false, error: 'Failed to logout' }
     }
 
+    logger.info('AUTH', 'logout', { userId: user?.id })
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error during logout:', error)
+    logger.error('AUTH', 'logout_error', { details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -355,12 +367,12 @@ export async function getCurrentUser(): Promise<ActionResponse<any>> {
 
 // 5. UPDATE PROFILE
 export async function updateProfile(formData: FormData): Promise<ActionResponse> {
+  const supabase = await createClient()
+  let userId: string | undefined
   try {
-    const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: 'Not authenticated' }
-    }
+    if (userError || !user) return { success: false, error: 'Not authenticated' }
+    userId = user.id
 
     const data = {
       firstName: formData.get('firstName') as string,
@@ -375,7 +387,6 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
       return { success: false, error: firstError || 'Validation failed' }
     }
 
-    // Check phone uniqueness, excluding the current user
     const { data: existingPhone } = await supabase
       .from('profiles')
       .select('id')
@@ -383,9 +394,7 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
       .neq('id', user.id)
       .maybeSingle()
 
-    if (existingPhone) {
-      return { success: false, error: 'Phone number is already in use' }
-    }
+    if (existingPhone) return { success: false, error: 'Phone number is already in use' }
 
     const { error: updateError } = await supabase
       .from('profiles')
@@ -399,45 +408,38 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
       .eq('id', user.id)
 
     if (updateError) {
-      console.error('Profile update error:', updateError)
+      logger.error('AUTH', 'profile_update_failed', { userId, details: { error: updateError.message } })
       return { success: false, error: 'Failed to update profile' }
     }
 
+    logger.info('AUTH', 'profile_updated', { userId })
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error updating profile:', error)
+    logger.error('AUTH', 'profile_update_error', { userId, details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
 
 // 6. UPDATE PROFILE PHOTO
 export async function updateProfilePhoto(formData: FormData): Promise<ActionResponse<{ photoUrl: string }>> {
+  const supabase = await createClient()
+  let userId: string | undefined
   try {
-    const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: 'Not authenticated' }
-    }
+    if (userError || !user) return { success: false, error: 'Not authenticated' }
+    userId = user.id
 
     const file = formData.get('profilePhoto') as File
-    if (!file || file.size === 0) {
-      return { success: false, error: 'No file provided' }
-    }
+    if (!file || file.size === 0) return { success: false, error: 'No file provided' }
 
     const MAX_FILE_SIZE = 5 * 1024 * 1024
-    if (file.size > MAX_FILE_SIZE) {
-      return { success: false, error: 'File size must be less than 5MB' }
-    }
+    if (file.size > MAX_FILE_SIZE) return { success: false, error: 'File size must be less than 5MB' }
 
     const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      return { success: false, error: 'Only JPEG and PNG images are accepted' }
-    }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return { success: false, error: 'Only JPEG and PNG images are accepted' }
 
     const isValidSignature = await validateFileSignature(file)
-    if (!isValidSignature) {
-      return { success: false, error: 'Invalid file: content does not match an image format' }
-    }
+    if (!isValidSignature) return { success: false, error: 'Invalid file: content does not match an image format' }
 
     const sanitizedFilename = sanitizeFilename(file.name)
     const fileName = `${user.id}/${Date.now()}-${sanitizedFilename}`
@@ -447,13 +449,11 @@ export async function updateProfilePhoto(formData: FormData): Promise<ActionResp
       .upload(fileName, file, { cacheControl: '3600', upsert: true })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
+      logger.error('AUTH', 'profile_photo_upload_failed', { userId, details: { error: uploadError.message } })
       return { success: false, error: 'Failed to upload photo. Please try again.' }
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('profile-photos')
-      .getPublicUrl(fileName)
+    const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(fileName)
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -461,13 +461,16 @@ export async function updateProfilePhoto(formData: FormData): Promise<ActionResp
       .eq('id', user.id)
 
     if (profileError) {
-      console.error('Profile photo update error:', profileError)
+      logger.error('AUTH', 'profile_photo_db_update_failed', { userId, details: { error: profileError.message } })
       return { success: false, error: 'Failed to update profile photo' }
     }
 
+    logger.info('AUTH', 'profile_photo_updated', { userId })
     return { success: true, data: { photoUrl: publicUrl } }
   } catch (error) {
-    console.error('Unexpected error updating profile photo:', error)
+    logger.error('AUTH', 'profile_photo_update_error', { userId, details: { error: String(error) } })
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
+
+

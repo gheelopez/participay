@@ -3,6 +3,11 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
 
+const SESSION_TIMEOUT_MINUTES = parseInt(
+  process.env.SESSION_TIMEOUT_MINUTES || '30',
+  10
+)
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -26,6 +31,25 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // Session timeout check
+  if (user && session?.expires_at) {
+    const now = Date.now()
+    const timeoutMs = SESSION_TIMEOUT_MINUTES * 60 * 1000
+    // Supabase default expiry is 1hr from issue, so issued_at ≈ expires_at - 3600
+    const issuedAt = (session.expires_at - 3600) * 1000
+    const sessionAge = now - issuedAt
+    if (sessionAge > timeoutMs) {
+      console.log(
+        `[${new Date().toISOString()}] [INFO] [AUTH] session_timeout user=${user.id}`
+      )
+      await supabase.auth.signOut()
+      return NextResponse.redirect(
+        new URL('/login?reason=timeout', request.url)
+      )
+    }
+  }
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/register')) {
@@ -37,17 +61,29 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Protect /admin routes — only allow users with role = 'admin'
-  if (user && pathname.startsWith('/admin')) {
+  // For authenticated users: check ban status + admin role (single query)
+  if (user) {
     const { data } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_banned')
       .eq('id', user.id)
       .single()
 
-    const profile = data as { role: 'user' | 'admin' } | null
+    const profile = data as { role: 'user' | 'admin'; is_banned: boolean } | null
 
-    if (profile?.role !== 'admin') {
+    // Ban enforcement — immediately sign out banned users
+    if (profile?.is_banned) {
+      console.log(
+        `[${new Date().toISOString()}] [WARN] [SECURITY] banned_user_blocked user=${user.id}`
+      )
+      await supabase.auth.signOut()
+      return NextResponse.redirect(
+        new URL('/login', request.url)
+      )
+    }
+
+    // Protect /admin routes — only allow users with role = 'admin'
+    if (pathname.startsWith('/admin') && profile?.role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

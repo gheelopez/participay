@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { updateProfile } from '@/app/actions/auth'
 
@@ -84,149 +84,281 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   const showPrefix = isPhoneFocused || form.phoneDigits.length > 0
 
+  const formatPHNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 10)
+    const parts = []
+    if (digits.length > 0) parts.push(digits.slice(0, 3))
+    if (digits.length >= 4) parts.push(digits.slice(3, 6))
+    if (digits.length >= 7) parts.push(digits.slice(6, 10))
+    return parts.join(" ")
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-[#132660]">Personal Information</h2>
-        <p className="text-sm text-gray-500 mt-1">Update your profile details below.</p>
-      </div>
+      <Card className="border-none shadow-sm rounded-4xl p-6">
+        <CardHeader className="text-left">
+          <CardTitle className="text-xl mt-6">
+            <h1>Profile Information</h1>
+          </CardTitle>
+          <CardDescription>
+            Update your personal details below.
+          </CardDescription>
 
-      {success && (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-6 space-y-6">
-          {/* First Name + Last Name */}
-          <div className="grid grid-cols-2 gap-4">
+        </CardHeader>
+        <CardContent>
+          {/* First Name & Last Name */}
+          <div className="grid grid-cols-2 gap-4 pb-4">
+            {/* First Name */}
             <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                value={form.firstName}
-                onChange={handleChange('firstName')}
-                disabled={isPending}
-                placeholder="First name"
-                className="rounded-xl border-gray-200 focus-visible:ring-[#132660]"
-              />
+              <div className="relative w-full">
+                <input
+                  id="firstName"
+                  type="text"
+                  value={form.firstName}
+                  onChange={handleChange('firstName')}
+                  disabled={isPending}
+                  className="
+                    peer w-full
+                    rounded-full
+                    px-6 pt-5 pb-2
+                    text-black text-base
+                    bg-white
+                    transition-all duration-300
+                    border
+                    border-gray-200
+                    focus-visible:ring-[#132660]
+                  "
+                />
+                <label
+                  htmlFor="firstName"
+                  className={`
+                    absolute left-6
+                    transition-all duration-300 ease-out
+                    pointer-events-none
+                    top-2 translate-y-0 text-xs
+                    text-gray-400
+                  `}
+                >
+                  First Name
+                </label>
+              </div>
             </div>
+
+            {/* Last Name */}
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                value={form.lastName}
-                onChange={handleChange('lastName')}
-                disabled={isPending}
-                placeholder="Last name"
-                className="rounded-xl border-gray-200 focus-visible:ring-[#132660]"
-              />
+              <div className="relative w-full">
+                <input
+                  id="lastName"
+                  type="text"
+                  value={form.lastName}
+                  onChange={handleChange('lastName')}
+                  disabled={isPending}
+                  className="
+                    peer w-full
+                    rounded-full
+                    px-6 pt-5 pb-2
+                    text-black text-base
+                    bg-white
+                    transition-all duration-300
+                    border
+                    border-gray-200
+                    focus-visible:ring-[#132660]
+                  "
+                />
+                <label
+                  htmlFor="lastName"
+                  className={`
+                    absolute left-6
+                    transition-all duration-300 ease-out
+                    pointer-events-none
+                    top-2 translate-y-0 text-xs
+                    text-gray-400
+                  `}
+                >
+                  Last Name
+                </label>
+              </div>
             </div>
           </div>
 
           {/* Email (read-only) */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email
-            </Label>
-            <div className="relative">
-              <Input
-                id="email"
-                type="email"
-                value={profile.email}
-                readOnly
-                disabled
-                className="rounded-xl border-gray-200 bg-gray-50 text-gray-500 pr-24"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-                Verified
-              </span>
+            <div className="pb-4">
+              <div className="relative w-full">
+                <input
+                  id="email"
+                  type="email"
+                  value={profile.email}
+                  readOnly
+                  disabled
+                  className="
+                    peer w-full
+                    rounded-full
+                    px-6 pt-5 pb-2
+                    text-gray-500 text-base
+                    bg-gray-50
+                    transition-all duration-300
+                    border
+                    border-gray-200
+                    focus-visible:ring-[#132660]
+                  "
+                />
+                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-4xl px-3 py-1.5">
+                  Verified
+                </span>
+                <label
+                  htmlFor="email"
+                  className={`
+                    absolute left-6
+                    transition-all duration-300 ease-out
+                    pointer-events-none
+                    top-2 translate-y-0 text-xs
+                    text-gray-400
+                  `}
+                >
+                  Email
+                </label>
+              </div>
             </div>
-          </div>
 
-          {/* Phone + School */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700">
-                Phone Number
-              </Label>
-              <div className="relative">
-                {showPrefix && (
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-700 pointer-events-none select-none">
-                    +63
-                  </span>
-                )}
-                <Input
+          {/* Phone */}
+            <div className="pb-4">
+              <div className="relative w-full">
+                <span
+                  className="
+                    absolute
+                    left-6
+                    top-[1.56rem]
+                    -translate-y-1
+                    text-base
+                    text-gray-700
+                    pointer-events-none
+                    select-none
+                  "
+                >
+                  +63
+                </span>
+                <input
                   id="phoneNumber"
                   type="tel"
-                  value={form.phoneDigits}
+                  value={formatPHNumber(form.phoneDigits)}
                   onChange={handleChange('phoneDigits')}
                   onFocus={() => setIsPhoneFocused(true)}
                   onBlur={() => setIsPhoneFocused(false)}
                   disabled={isPending}
-                  placeholder={showPrefix ? '' : '+63 phone number'}
-                  className={`rounded-xl border-gray-200 focus-visible:ring-[#132660] ${showPrefix ? 'pl-12' : ''}`}
-                  maxLength={10}
+                  className="
+                    peer w-full
+                    rounded-full
+                    px-15 pt-5 pb-2
+                    text-black text-base
+                    bg-white
+                    transition-all duration-300
+                    border
+                    border-gray-200
+                    focus-visible:ring-[#132660]
+                  "
                 />
+                <label
+                  htmlFor="phoneNumber"
+                  className={`
+                    absolute left-6
+                    transition-all duration-300 ease-out
+                    pointer-events-none
+                    top-2 translate-y-0 text-xs
+                    text-gray-400
+                  `}
+                >
+                  Phone Number
+                </label>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="school" className="text-sm font-medium text-gray-700">
-                School
-              </Label>
-              <Input
-                id="school"
-                value={form.school}
-                onChange={handleChange('school')}
-                disabled={isPending}
-                placeholder="Your school or institution"
-                className="rounded-xl border-gray-200 focus-visible:ring-[#132660]"
-              />
+            
+          {/* School */}
+            <div className="pb-10">
+              <div className="relative w-full">
+                <input
+                  id="school"
+                  value={form.school}
+                  onChange={handleChange('school')}
+                  disabled={isPending}
+                  className="
+                    peer w-full
+                    rounded-full
+                    px-6 pt-5 pb-2
+                    text-black text-base
+                    bg-white
+                    transition-all duration-300
+                    border
+                    border-gray-200
+                    focus-visible:ring-[#132660]
+                  "
+                />
+                <label
+                  htmlFor="school"
+                  className={`
+                    absolute left-6
+                    transition-all duration-300 ease-out
+                    pointer-events-none
+                    top-2 translate-y-0 text-xs
+                    text-gray-400
+                  `}
+                >
+                  School/University
+                </label>
+              </div>
             </div>
+
+          <div className="flex items-center justify-between gap-4 mb-6">
+          
+          {/* Message */}
+          <div className="min-h-[50px] flex items-center">
+            {success && (
+              <Alert className="rounded-4xl border-green-200 bg-green-50 text-green-600">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-600">{success}</AlertDescription>
+              </Alert>
+            )}
+
+            {error && (
+              <Alert className="rounded-4xl border-red-200 bg-red-50 text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
+              </Alert>
+            )}
           </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="pillOutline"
+              size="lg"
+              onClick={handleDiscard}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="pillOutline"
+              size="lg"
+              onClick={handleSave}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </div>
+        </div>
+
         </CardContent>
       </Card>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleDiscard}
-          disabled={isPending}
-          className="rounded-full px-6 border-gray-300 text-gray-700 hover:bg-gray-50"
-        >
-          Discard Changes
-        </Button>
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isPending}
-          className="rounded-full px-6 bg-[#132660] text-white hover:bg-[#a5c4d4] transition-colors duration-200"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Save Changes'
-          )}
-        </Button>
-      </div>
     </div>
   )
 }

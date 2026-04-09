@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { updateProfile } from '@/app/actions/auth'
 
@@ -95,26 +95,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-[#132660]">Personal Information</h2>
-        <p className="text-sm text-gray-500 mt-1">Update your profile details below.</p>
-      </div>
+      <Card className="border-none shadow-sm rounded-4xl p-6">
+        <CardHeader className="text-left">
+          <CardTitle className="text-xl mt-6">
+            <h1>Profile Information</h1>
+          </CardTitle>
+          <CardDescription>
+            Update your personal details below.
+          </CardDescription>
 
-      {success && (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card className="border-0 shadow-sm">
+        </CardHeader>
         <CardContent>
           {/* First Name & Last Name */}
           <div className="grid grid-cols-2 gap-4 pb-4">
@@ -212,7 +202,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     focus-visible:ring-[#132660]
                   "
                 />
-                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-4xl px-3 py-1.5">
                   Verified
                 </span>
                 <label
@@ -231,7 +221,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             </div>
 
           {/* Phone */}
-            <div className="pb-6">
+            <div className="pb-4">
               <div className="relative w-full">
                 <span
                   className="
@@ -283,7 +273,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             </div>
             
           {/* School */}
-            <div className="pb-1">
+            <div className="pb-10">
               <div className="relative w-full">
                 <input
                   id="school"
@@ -316,36 +306,59 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 </label>
               </div>
             </div>
+
+          <div className="flex items-center justify-between gap-4 mb-6">
+          
+          {/* Message */}
+          <div className="min-h-[50px] flex items-center">
+            {success && (
+              <Alert className="rounded-4xl border-green-200 bg-green-50 text-green-600">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-600">{success}</AlertDescription>
+              </Alert>
+            )}
+
+            {error && (
+              <Alert className="rounded-4xl border-red-200 bg-red-50 text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="pillOutline"
+              size="lg"
+              onClick={handleDiscard}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="pillOutline"
+              size="lg"
+              onClick={handleSave}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </div>
+        </div>
+
         </CardContent>
       </Card>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleDiscard}
-          disabled={isPending}
-          className="rounded-full px-6 border-gray-300 text-gray-700 hover:bg-gray-50"
-        >
-          Discard Changes
-        </Button>
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isPending}
-          className="rounded-full px-6 bg-[#132660] text-white hover:bg-[#a5c4d4] transition-colors duration-200"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Save Changes'
-          )}
-        </Button>
-      </div>
     </div>
   )
 }

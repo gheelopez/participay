@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { updateProfile } from '@/app/actions/auth'
+import { updateProfile, updateProfilePhoto } from '@/app/actions/auth'
 
 interface Profile {
   first_name: string | null
@@ -20,6 +20,9 @@ interface Profile {
 
 interface ProfileFormProps {
   profile: Profile
+  pendingPhotoFile: File | null
+  onPhotoSaved: (newUrl: string) => void
+  onDiscardPhoto: () => void
 }
 
 function deriveInitial(profile: Profile) {
@@ -33,7 +36,12 @@ function deriveInitial(profile: Profile) {
   }
 }
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({
+  profile,
+  pendingPhotoFile,
+  onPhotoSaved,
+  onDiscardPhoto,
+}: ProfileFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isPhoneFocused, setIsPhoneFocused] = useState(false)
@@ -57,6 +65,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   function handleDiscard() {
     setForm(original)
+    onDiscardPhoto()
     setSuccess(null)
     setError(null)
   }
@@ -65,16 +74,32 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     setSuccess(null)
     setError(null)
 
-    const data = new FormData()
-    data.append('firstName', form.firstName)
-    data.append('lastName', form.lastName)
-    data.append('phoneNumber', '+63' + form.phoneDigits)
-    data.append('school', form.school)
-
     startTransition(async () => {
+      // 1. Upload photo first if there's a pending one
+      if (pendingPhotoFile) {
+        const photoFormData = new FormData()
+        photoFormData.append('profilePhoto', pendingPhotoFile)
+        const photoResult = await updateProfilePhoto(photoFormData)
+ 
+        if (!photoResult.success || !photoResult.data) {
+          setError(photoResult.error || 'Failed to upload photo')
+          return
+        }
+ 
+        // Notify AccountLayout so it updates the sidebar + navbar
+        onPhotoSaved(photoResult.data.photoUrl)
+      }
+ 
+      // 2. Save profile fields
+      const data = new FormData()
+      data.append('firstName', form.firstName)
+      data.append('lastName', form.lastName)
+      data.append('phoneNumber', '+63' + form.phoneDigits)
+      data.append('school', form.school)
+ 
       const result = await updateProfile(data)
       if (result.success) {
-        setSuccess('Profile updated successfully.')
+        setSuccess('Profile saved successfully.')
         router.refresh()
       } else {
         setError(result.error || 'Failed to update profile')
@@ -83,6 +108,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   }
 
   const showPrefix = isPhoneFocused || form.phoneDigits.length > 0
+
+  const hasChanges =
+    form.firstName !== original.firstName ||
+    form.lastName !== original.lastName ||
+    form.phoneDigits !== original.phoneDigits ||
+    form.school !== original.school ||
+    pendingPhotoFile !== null
 
   const formatPHNumber = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 10)
@@ -333,7 +365,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               variant="pillOutline"
               size="lg"
               onClick={handleDiscard}
-              disabled={isPending}
+              disabled={isPending || !hasChanges}
             >
               Cancel
             </Button>
@@ -343,7 +375,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               variant="pillOutline"
               size="lg"
               onClick={handleSave}
-              disabled={isPending}
+              disabled={isPending || !hasChanges}
             >
               {isPending ? (
                 <>

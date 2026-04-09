@@ -31,6 +31,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
   const [currentTab, setCurrentTab] = useState<Tab>(activeTab)
   const [photoUrl, setPhotoUrl] = useState<string | null>(profile.profile_photo_url)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null)
 
   function switchTab(tab: Tab) {
     setCurrentTab(tab)
@@ -45,6 +46,11 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
     { id: 'profile', label: 'Profile', icon: Settings },
   ]
 
+  function handlePhotoSaved(newUrl: string) {
+    setPhotoUrl(newUrl)
+    setPendingPhotoFile(null)
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-2 space-y-6">
       <div className="flex gap-8 items-start">
@@ -53,8 +59,15 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
           {/* Photo upload */}
           <SidebarPhotoUpload
             photoUrl={photoUrl}
-            onPhotoUpdated={(url) => {
-              setPhotoUrl(url)
+            onPhotoUpdated={(fileOrUrl: any) => {
+              // if it's a file → store as pending
+              if (fileOrUrl instanceof File) {
+                setPendingPhotoFile(fileOrUrl)
+                setPhotoUrl(URL.createObjectURL(fileOrUrl)) // preview
+              } else {
+                // fallback if still using URL
+                setPhotoUrl(fileOrUrl)
+              }
               setPhotoError(null)
             }}
             onError={(msg) => setPhotoError(msg)}
@@ -93,7 +106,12 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
         {/* Content */}
         <main className="flex-1 min-w-0 min-h-0">
           {currentTab === 'profile' && (
-            <ProfileForm profile={profile} />
+            <ProfileForm
+              profile={profile}
+              pendingPhotoFile={pendingPhotoFile}
+              onPhotoSaved={handlePhotoSaved}
+              onDiscardPhoto={() => setPendingPhotoFile(null)}
+            />
           )}
 
           {currentTab === 'post-study' && (

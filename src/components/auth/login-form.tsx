@@ -86,7 +86,6 @@ export function LoginForm() {
 
       if (result.success) {
         const dest = result.data?.role === 'admin' ? '/admin' : '/'
-        router.refresh()
         router.push(dest)
       } else {
         if (result.requiresCaptcha) {

@@ -14,25 +14,6 @@ export function useAuthNavbar() {
   useEffect(() => {
     const supabase = createClient()
 
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        setIsLoggedIn(true)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('profile_photo_url')
-          .eq('id', user.id)
-          .single()
-        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
-      } else {
-        setIsLoggedIn(false)
-        setProfilePhotoUrl(null)
-      }
-    }
-
-    loadUser()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setIsLoggedIn(true)
@@ -59,7 +40,29 @@ export function useAuthNavbar() {
       subscription.unsubscribe()
       window.removeEventListener('profile-photo-updated', handleProfilePhotoUpdated)
     }
-  }, [pathname]) // 👈 re-run loadUser whenever the route changes
+  }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setIsLoggedIn(true)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('profile_photo_url')
+          .eq('id', user.id)
+          .single()
+        setProfilePhotoUrl(profile?.profile_photo_url ?? null)
+      } else {
+        setIsLoggedIn(false)
+        setProfilePhotoUrl(null)
+      }
+    }
+
+    loadUser()
+  }, [pathname])
 
   const handleLogout = async () => {
     await logoutUser()

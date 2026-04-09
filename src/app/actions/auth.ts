@@ -249,12 +249,6 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     const {email, password, captchaToken} = validation.data;
     const attempts = (profileData as any)?.failed_attempts || 0;
 
-    // 2b. Ban enforcement — block banned users with a generic error
-    if ((profileData as any)?.is_banned) {
-      logger.warn('SECURITY', 'login_blocked_banned', { email })
-      return { success: false, error: 'Incorrect email or password' }
-    }
-
     // 3. captcha verification after 3 failed attempts
     if (attempts >= 3) {
       if (!captchaToken) {
@@ -289,6 +283,13 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
 
     if (!data.user) {
       return { success: false, error: 'Login failed' }
+    }
+
+    // 4b. Ban enforcement — only after credentials are verified correct
+    if ((profileData as any)?.is_banned) {
+      logger.warn('SECURITY', 'login_blocked_banned', { email, userId: data.user.id })
+      await supabase.auth.signOut()
+      return { success: false, error: 'This account has been suspended.' }
     }
 
     //reset failed attempts on successful login

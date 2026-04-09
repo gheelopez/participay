@@ -61,17 +61,29 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Protect /admin routes — only allow users with role = 'admin'
-  if (user && pathname.startsWith('/admin')) {
+  // For authenticated users: check ban status + admin role (single query)
+  if (user) {
     const { data } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_banned')
       .eq('id', user.id)
       .single()
 
-    const profile = data as { role: 'user' | 'admin' } | null
+    const profile = data as { role: 'user' | 'admin'; is_banned: boolean } | null
 
-    if (profile?.role !== 'admin') {
+    // Ban enforcement — immediately sign out banned users
+    if (profile?.is_banned) {
+      console.log(
+        `[${new Date().toISOString()}] [WARN] [SECURITY] banned_user_blocked user=${user.id}`
+      )
+      await supabase.auth.signOut()
+      return NextResponse.redirect(
+        new URL('/login', request.url)
+      )
+    }
+
+    // Protect /admin routes — only allow users with role = 'admin'
+    if (pathname.startsWith('/admin') && profile?.role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

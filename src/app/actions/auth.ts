@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { registerSchema, loginSchema, updateProfileSchema } from '@/lib/validations/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
+import { handleError } from '@/lib/error-handler'
 import type { LoginInput } from '@/lib/validations/auth'
 import type { AuthError } from '@supabase/supabase-js'
 
@@ -63,7 +64,7 @@ async function verifyCaptcha(token: string | undefined): Promise<boolean> {
     const data = await response.json();
     return data.success;
   } catch (error) {
-    console.error("CAPTCHA verification error:", error);
+    handleError(error, { category: 'AUTH', action: 'captcha_verify' });
     return false;
   }
 }
@@ -214,8 +215,10 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
     logger.info('AUTH', 'register_success', { userId, email: validation.data.email })
     return { success: true, data: authData.user }
   } catch (error) {
-    logger.error('AUTH', 'register_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred. Please try again.' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'AUTH', action: 'register_error' }),
+    }
   }
 }
 
@@ -305,8 +308,10 @@ export async function loginUser(input: LoginInput): Promise<ActionResponse<any>>
     logger.info('AUTH', 'login_success', { userId: data.user.id, email })
     return { success: true, data: { user: data.user, role: (profile as any)?.role ?? 'user' } }
   } catch (error) {
-    logger.error('AUTH', 'login_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred. Please try again.' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'AUTH', action: 'login_error' }),
+    }
   }
 }
 
@@ -326,8 +331,10 @@ export async function logoutUser(): Promise<ActionResponse> {
     logger.info('AUTH', 'logout', { userId: user?.id })
     return { success: true }
   } catch (error) {
-    logger.error('AUTH', 'logout_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'AUTH', action: 'logout_error' }),
+    }
   }
 }
 
@@ -354,14 +361,16 @@ export async function getCurrentUser(): Promise<ActionResponse<any>> {
       .single()
 
     if (profileError) {
-      console.error('Profile fetch error:', profileError)
+      handleError(profileError, { category: 'AUTH', action: 'profile_fetch_failed' })
       return { success: true, data: user } // Return user even if profile fetch fails
     }
 
     return { success: true, data: { ...user, profile } }
   } catch (error) {
-    console.error('Unexpected error getting user:', error)
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'AUTH', action: 'get_current_user_error' }),
+    }
   }
 }
 
@@ -408,15 +417,21 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
       .eq('id', user.id)
 
     if (updateError) {
-      logger.error('AUTH', 'profile_update_failed', { userId, details: { error: updateError.message } })
+      logger.error('TRANSACTION', 'profile_update_failed', { userId, details: { error: updateError.message } })
       return { success: false, error: 'Failed to update profile' }
     }
 
-    logger.info('AUTH', 'profile_updated', { userId })
+    logger.info('TRANSACTION', 'profile_updated', { userId })
     return { success: true }
   } catch (error) {
-    logger.error('AUTH', 'profile_update_error', { userId, details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, {
+        category: 'TRANSACTION',
+        action: 'profile_update_error',
+        metadata: { userId },
+      }),
+    }
   }
 }
 
@@ -449,7 +464,7 @@ export async function updateProfilePhoto(formData: FormData): Promise<ActionResp
       .upload(fileName, file, { cacheControl: '3600', upsert: true })
 
     if (uploadError) {
-      logger.error('AUTH', 'profile_photo_upload_failed', { userId, details: { error: uploadError.message } })
+      logger.error('TRANSACTION', 'profile_photo_upload_failed', { userId, details: { error: uploadError.message } })
       return { success: false, error: 'Failed to upload photo. Please try again.' }
     }
 
@@ -461,15 +476,21 @@ export async function updateProfilePhoto(formData: FormData): Promise<ActionResp
       .eq('id', user.id)
 
     if (profileError) {
-      logger.error('AUTH', 'profile_photo_db_update_failed', { userId, details: { error: profileError.message } })
+      logger.error('TRANSACTION', 'profile_photo_db_update_failed', { userId, details: { error: profileError.message } })
       return { success: false, error: 'Failed to update profile photo' }
     }
 
-    logger.info('AUTH', 'profile_photo_updated', { userId })
+    logger.info('TRANSACTION', 'profile_photo_updated', { userId })
     return { success: true, data: { photoUrl: publicUrl } }
   } catch (error) {
-    logger.error('AUTH', 'profile_photo_update_error', { userId, details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, {
+        category: 'TRANSACTION',
+        action: 'profile_photo_update_error',
+        metadata: { userId },
+      }),
+    }
   }
 }
 

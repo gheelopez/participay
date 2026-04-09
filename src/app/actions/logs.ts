@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
+import { handleError } from '@/lib/error-handler'
 
 type ActionResponse<T = void> = {
   success: boolean
@@ -52,7 +53,9 @@ export async function getRecentLogs(lines: number = 200): Promise<ActionResponse
 
     return { success: true, data: lastLines || 'Log file is empty.' }
   } catch (error) {
-    logger.error('ADMIN', 'logs_read_error', { details: { error: String(error) } })
-    return { success: false, error: 'Failed to read log file' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'logs_read' }),
+    }
   }
 }

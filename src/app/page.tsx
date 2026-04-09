@@ -49,7 +49,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
             asChild
             className="rounded-full py-6 px-6 bg-transparent border-1 border-[#132660] hover:border-[#a5c4d4] hover:bg-[#a5c4d4] hover:text-[#F4F4F4] text-[#132660] transition-all duration-300 ease-out"
           >
-            <Link href="/studies" className="flex items-center gap-2">
+            <Link href="/browse" className="flex items-center gap-2">
               Browse Studies
             </Link>
           </Button>
@@ -320,7 +320,7 @@ function Footer() {
             </p>
           </div>
           <div className="flex flex-wrap gap-6">
-            <Link href="/studies" className="text-sm transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Link href="/browse" className="text-sm transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.6)' }}>
               Browse Studies
             </Link>
             <Link href="/login" className="text-sm transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.6)' }}>

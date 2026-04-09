@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
+import { handleError } from '@/lib/error-handler'
 
 type ActionResponse<T = void> = {
   success: boolean
@@ -90,8 +91,10 @@ export async function getAllUsers(): Promise<ActionResponse<any[]>> {
 
     return { success: true, data: usersWithCounts }
   } catch (error) {
-    logger.error('ADMIN', 'fetch_users_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'fetch_users' }),
+    }
   }
 }
 
@@ -133,8 +136,10 @@ export async function deleteAnyPost(postId: string): Promise<ActionResponse> {
 
     return { success: true }
   } catch (error) {
-    logger.error('ADMIN', 'delete_post_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'delete_post' }),
+    }
   }
 }
 
@@ -186,8 +191,10 @@ export async function setUserRole(
 
     return { success: true }
   } catch (error) {
-    logger.error('ADMIN', 'set_role_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'set_role' }),
+    }
   }
 }
 
@@ -231,8 +238,10 @@ export async function setBanStatus(
 
     return { success: true }
   } catch (error) {
-    logger.error('ADMIN', 'set_ban_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'set_ban' }),
+    }
   }
 }
 
@@ -263,7 +272,9 @@ export async function getAllPostsAdmin(): Promise<ActionResponse<any[]>> {
 
     return { success: true, data: data || [] }
   } catch (error) {
-    logger.error('ADMIN', 'fetch_posts_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'ADMIN', action: 'fetch_posts' }),
+    }
   }
 }

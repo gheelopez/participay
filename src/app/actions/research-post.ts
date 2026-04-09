@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { createResearchPostSchema, updateResearchPostSchema } from '@/lib/validations/research-post'
 import { logger } from '@/lib/logger'
+import { handleError } from '@/lib/error-handler'
 import type { CreateResearchPostInput, UpdateResearchPostInput } from '@/lib/validations/research-post'
 
 // Type for our response
@@ -32,14 +33,18 @@ export async function getAllResearchPosts(): Promise<ActionResponse<any[]>> {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching posts:', error)
-      return { success: false, error: 'Failed to fetch research posts' }
+      return {
+        success: false,
+        error: handleError(error, { category: 'TRANSACTION', action: 'fetch_all_posts_failed' }),
+      }
     }
 
     return { success: true, data: data || [] }
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'fetch_all_posts_error' }),
+    }
   }
 }
 
@@ -62,14 +67,18 @@ export async function getUserResearchPosts(): Promise<ActionResponse<any[]>> {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching user posts:', error)
-      return { success: false, error: 'Failed to fetch your posts' }
+      return {
+        success: false,
+        error: handleError(error, { category: 'TRANSACTION', action: 'fetch_user_posts_failed' }),
+      }
     }
 
     return { success: true, data: data || [] }
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'fetch_user_posts_error' }),
+    }
   }
 }
 
@@ -93,14 +102,18 @@ export async function getResearchPostById(id: string): Promise<ActionResponse<an
       .single()
 
     if (error) {
-      console.error('Error fetching post:', error)
-      return { success: false, error: 'Post not found' }
+      return {
+        success: false,
+        error: handleError(error, { category: 'TRANSACTION', action: 'fetch_post_failed' }),
+      }
     }
 
     return { success: true, data }
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'fetch_post_error' }),
+    }
   }
 }
 
@@ -148,8 +161,10 @@ export async function createResearchPost(input: CreateResearchPostInput): Promis
 
     return { success: true, data }
   } catch (error) {
-    logger.error('TRANSACTION', 'study_create_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'study_create' }),
+    }
   }
 }
 
@@ -204,8 +219,10 @@ export async function updateResearchPost(
 
     return { success: true, data }
   } catch (error) {
-    logger.error('TRANSACTION', 'study_edit_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'study_edit' }),
+    }
   }
 }
 
@@ -246,8 +263,10 @@ export async function deleteResearchPost(id: string): Promise<ActionResponse> {
 
     return { success: true }
   } catch (error) {
-    logger.error('TRANSACTION', 'study_delete_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'study_delete' }),
+    }
   }
 }
 
@@ -289,7 +308,9 @@ export async function togglePostStatus(id: string, isOpen: boolean): Promise<Act
 
     return { success: true, data }
   } catch (error) {
-    logger.error('TRANSACTION', 'study_toggle_error', { details: { error: String(error) } })
-    return { success: false, error: 'An unexpected error occurred' }
+    return {
+      success: false,
+      error: handleError(error, { category: 'TRANSACTION', action: 'study_toggle' }),
+    }
   }
 }

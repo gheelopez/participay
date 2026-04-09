@@ -2,11 +2,14 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
+import { logger } from '@/lib/logger'
 
 const SESSION_TIMEOUT_MINUTES = parseInt(
   process.env.SESSION_TIMEOUT_MINUTES || '30',
   10
 )
+const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000
+const LAST_ACTIVITY_COOKIE = 'last_activity'
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -31,24 +34,31 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: { session } } = await supabase.auth.getSession()
 
-  // Session timeout check
-  if (user && session?.expires_at) {
+  // Idle session timeout — cookie-based
+  if (user) {
     const now = Date.now()
-    const timeoutMs = SESSION_TIMEOUT_MINUTES * 60 * 1000
-    // Supabase default expiry is 1hr from issue, so issued_at ≈ expires_at - 3600
-    const issuedAt = (session.expires_at - 3600) * 1000
-    const sessionAge = now - issuedAt
-    if (sessionAge > timeoutMs) {
-      console.log(
-        `[${new Date().toISOString()}] [INFO] [AUTH] session_timeout user=${user.id}`
-      )
+    const lastActivityRaw = request.cookies.get(LAST_ACTIVITY_COOKIE)?.value
+    const lastActivity = lastActivityRaw ? parseInt(lastActivityRaw, 10) : NaN
+
+    if (!Number.isNaN(lastActivity) && now - lastActivity > SESSION_TIMEOUT_MS) {
+      logger.info('AUTH', 'session_timeout', { userId: user.id })
       await supabase.auth.signOut()
-      return NextResponse.redirect(
+      const redirectResponse = NextResponse.redirect(
         new URL('/login?reason=timeout', request.url)
       )
+      redirectResponse.cookies.delete(LAST_ACTIVITY_COOKIE)
+      return redirectResponse
     }
+
+    // Refresh last_activity cookie on every request
+    response.cookies.set(LAST_ACTIVITY_COOKIE, String(now), {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: SESSION_TIMEOUT_MINUTES * 60 * 2,
+    })
   }
 
   // Redirect authenticated users away from auth pages
@@ -73,9 +83,7 @@ export async function proxy(request: NextRequest) {
 
     // Ban enforcement — immediately sign out banned users
     if (profile?.is_banned) {
-      console.log(
-        `[${new Date().toISOString()}] [WARN] [SECURITY] banned_user_blocked user=${user.id}`
-      )
+      logger.warn('SECURITY', 'banned_user_blocked', { userId: user.id })
       await supabase.auth.signOut()
       return NextResponse.redirect(
         new URL('/login', request.url)

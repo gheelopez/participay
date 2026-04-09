@@ -225,6 +225,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse<a
 // 2. LOGIN USER
 export async function loginUser(input: LoginInput): Promise<ActionResponse<any>> {
   try {
+    // throw new Error('DEBUG test — this should show full detail')
     // Rate limit: 10 attempts per 15 minutes per IP
     const loginLimit = await checkRateLimit('login', 10, 900)
     if (!loginLimit.allowed) {

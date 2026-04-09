@@ -256,8 +256,8 @@ export function PostStudyForm() {
             <Label className="text-xs text-gray-500">Amount per participant</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none select-none">&#8369;</span>
-              <Input type="number" min={0} value={f.compensation_amount} onChange={onChange('compensation_amount')}
-                disabled={isPending} placeholder="0"
+              <Input type="number" min={1} value={f.compensation_amount} onChange={onChange('compensation_amount')}
+                disabled={isPending} placeholder="e.g. 100"
                 className="rounded-xl border-gray-200 focus-visible:ring-[#132660] pl-8" />
             </div>
           </div>

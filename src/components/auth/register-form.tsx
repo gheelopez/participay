@@ -198,7 +198,15 @@ export function RegisterForm() {
           {errors.form && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errors.form}</AlertDescription>
+              <AlertDescription>
+                {errors.form.includes('\n') ? (
+                  <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs leading-relaxed">
+                    {errors.form}
+                  </pre>
+                ) : (
+                  errors.form
+                )}
+              </AlertDescription>
             </Alert>
           )}
 

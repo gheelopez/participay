@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-  LogOut, ShieldCheck, Users, FileText, ScrollText,
+  LogOut, ShieldCheck, Users, FileText,
   ArrowLeft, Search, ChevronLeft, ChevronRight,
   Ban, UserCheck, ArrowUpCircle, ArrowDownCircle,
-  Trash2, RefreshCw, AlertTriangle, Loader2
+  Trash2, AlertTriangle, Loader2
 } from 'lucide-react'
 import { logoutUser } from '@/app/actions/auth'
 import {
@@ -21,9 +21,8 @@ import {
   getAllPostsAdmin,
   checkAdminStatus,
 } from '@/app/actions/admin'
-import { getRecentLogs } from '@/app/actions/logs'
 
-type Tab = 'users' | 'posts' | 'logs'
+type Tab = 'users' | 'posts'
 
 interface Profile {
   id: string
@@ -70,12 +69,10 @@ export function AdminDashboard({ adminEmail, adminId }: AdminDashboardProps) {
   // Data
   const [users, setUsers] = useState<Profile[]>([])
   const [posts, setPosts] = useState<Post[]>([])
-  const [logs, setLogs] = useState<string>('')
 
   // Loading / errors
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [loadingPosts, setLoadingPosts] = useState(false)
-  const [loadingLogs, setLoadingLogs] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -117,28 +114,11 @@ export function AdminDashboard({ adminEmail, adminId }: AdminDashboardProps) {
     setLoadingPosts(false)
   }, [])
 
-  // Fetch logs
-  const fetchLogs = useCallback(async () => {
-    setLoadingLogs(true)
-    const result = await getRecentLogs(200)
-    if (result.success && result.data) {
-      setLogs(result.data)
-    } else {
-      setError(result.error || 'Failed to load logs')
-    }
-    setLoadingLogs(false)
-  }, [])
-
   // Load initial data (users + posts for stats)
   useEffect(() => {
     fetchUsers()
     fetchPosts()
   }, [fetchUsers, fetchPosts])
-
-  // Load tab data on switch
-  useEffect(() => {
-    if (currentTab === 'logs') fetchLogs()
-  }, [currentTab, fetchLogs])
 
   // Poll admin status — redirect immediately if demoted
   useEffect(() => {
@@ -224,7 +204,6 @@ export function AdminDashboard({ adminEmail, adminId }: AdminDashboardProps) {
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'users', label: 'Users', icon: Users },
     { id: 'posts', label: 'Posts', icon: FileText },
-    { id: 'logs', label: 'Logs', icon: ScrollText },
   ]
 
   return (
@@ -753,46 +732,6 @@ export function AdminDashboard({ adminEmail, adminId }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* LOGS TAB */}
-            {currentTab === 'logs' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Application Logs</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchLogs}
-                    disabled={loadingLogs}
-                    className="rounded-xl bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                  >
-                    {loadingLogs ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                    )}
-                    Refresh
-                  </Button>
-                </div>
-
-                <div className="bg-[#1e1e2e] rounded-2xl shadow-sm overflow-hidden">
-                  {loadingLogs ? (
-                    <div className="flex items-center justify-center py-20">
-                      <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
-                    </div>
-                  ) : (
-                    <div className="p-5 max-h-[600px] overflow-y-auto scrollbar-thin">
-                      <pre className="text-xs leading-relaxed font-mono text-gray-300 whitespace-pre-wrap break-all">
-                        {logs || 'No logs available.'}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-400">
-                  Showing the last 200 log entries from <code className="text-gray-500">logs/app.log</code>
-                </p>
-              </div>
-            )}
           </main>
         </div>
       </div>

@@ -238,13 +238,6 @@ export function LoginForm() {
                 </p>
               )}
 
-              {errors.form && (
-                <p className="absolute -bottom-5 left-2 flex items-center gap-1 text-xs text-destructive">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.form}
-                </p>
-              )}
-
             </div>
             <div className="flex justify-end pr-5">
               <Link
@@ -259,6 +252,21 @@ export function LoginForm() {
               </Link>
             </div>
           </div>
+
+          {errors.form && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {errors.form.includes('\n') ? (
+                  <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs leading-relaxed">
+                    {errors.form}
+                  </pre>
+                ) : (
+                  errors.form
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/*CAPTCHA*/}
           {showCaptcha && (

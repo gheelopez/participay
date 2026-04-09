@@ -21,7 +21,10 @@ export default async function AccountPage({ searchParams }: PageProps) {
   const activeTab = tab === 'post-study' ? 'post-study' : 'profile'
 
   return (
-    <AccountPageWrapper>
+    <AccountPageWrapper
+      initialIsLoggedIn={true}
+      initialProfilePhotoUrl={profile?.profile_photo_url ?? null}
+    >
       <AccountLayout profile={profile} activeTab={activeTab} />
     </AccountPageWrapper>
   )

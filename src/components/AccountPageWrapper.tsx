@@ -3,8 +3,21 @@
 import { Navbar } from '@/components/navbar'
 import { useAuthNavbar } from '@/hooks/use-auth-navbar'
 
-export function AccountPageWrapper({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, profilePhotoUrl, handleLogout } = useAuthNavbar()
+interface AccountPageWrapperProps {
+  children: React.ReactNode
+  initialIsLoggedIn?: boolean
+  initialProfilePhotoUrl?: string | null
+}
+
+export function AccountPageWrapper({
+  children,
+  initialIsLoggedIn,
+  initialProfilePhotoUrl,
+}: AccountPageWrapperProps) {
+  const { isLoggedIn, profilePhotoUrl, handleLogout } = useAuthNavbar({
+    initialIsLoggedIn,
+    initialProfilePhotoUrl,
+  })
 
   return (
     <div className="min-h-screen bg-[#F2F2F2]">

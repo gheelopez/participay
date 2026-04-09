@@ -5,9 +5,16 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logoutUser } from '@/app/actions/auth'
 
-export function useAuthNavbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
+interface UseAuthNavbarOptions {
+  initialIsLoggedIn?: boolean
+  initialProfilePhotoUrl?: string | null
+}
+
+export function useAuthNavbar(options: UseAuthNavbarOptions = {}) {
+  const [isLoggedIn, setIsLoggedIn] = useState(options.initialIsLoggedIn ?? false)
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(
+    options.initialProfilePhotoUrl ?? null
+  )
   const router = useRouter()
 
   useEffect(() => {

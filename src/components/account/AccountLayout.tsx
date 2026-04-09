@@ -100,7 +100,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 min-h-0">
           {currentTab === 'profile' && (
             <ProfileForm profile={profile} />
           )}

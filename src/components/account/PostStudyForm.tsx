@@ -4,8 +4,8 @@ import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertCircle, CheckCircle2, Loader2, Trash2,
-  ToggleLeft, ToggleRight, PenLine, X, Users,
-  Clock, ExternalLink, Search, Pencil,
+  LockOpen, Lock, PenLine, X, Users,
+  Clock, ExternalLink, Search, Pencil, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +73,8 @@ function postToFormState(post: ResearchPost): FormState {
     participants_needed: post.participants_needed?.toString() ?? '',
   }
 }
+
+const DESCRIPTION_TRUNCATE_LIMIT = 180
 
 export function PostStudyForm() {
   const router = useRouter()
@@ -206,7 +208,6 @@ export function PostStudyForm() {
       )
     : posts
 
-  // Reusable form fields renderer
   function renderFormFields(
     f: FormState,
     onChange: (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void,
@@ -272,20 +273,48 @@ export function PostStudyForm() {
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header row */}
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col h-full" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+      {/* Header row — always visible */}
+      <div className="flex items-center gap-3 mb-4 shrink-0">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search your studies..."
-            className="rounded-full border-gray-200 pl-9 focus-visible:ring-[#132660]" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search"
+            className="rounded-4xl border-gray-200 w-full py-2.25 pl-9 bg-white border border-gray-200 focus-visible:ring-[#132660]" />
         </div>
-        <Button type="button" onClick={() => setIsComposerOpen(true)}
-          className="rounded-full px-5 bg-[#132660] text-white hover:bg-[#a5c4d4] transition-colors duration-200 font-semibold shrink-0">
+        <Button variant="pillFull" size="lg" type="button" onClick={() => setIsComposerOpen(true)}>
           <PenLine className="w-4 h-4 mr-1.5" />
-          Post Study
+          Add Study
         </Button>
+      </div>
+
+      {/* Success alert — always visible, above scroll area */}
+      {success && (
+        <div className="shrink-0 mb-3">
+          <Alert className="border-green-200 bg-green-50 text-green-800">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      {/* Scrollable posts list*/}
+      <div className="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
+        {filteredPosts.length > 0 ? (
+          filteredPosts.map((post) => (
+            <TimelineCard key={post.id} post={post}
+              onDelete={handleDelete} onToggle={handleToggle}
+              onEdit={openEdit} disabled={isPending} />
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-400">
+            {searchQuery ? (
+              <><Search className="w-10 h-10 mx-auto mb-3 opacity-40" /><p className="text-sm">No studies match &ldquo;{searchQuery}&rdquo;</p></>
+            ) : (
+              <><PenLine className="w-10 h-10 mx-auto mb-3 opacity-40" /><p className="text-sm">No studies posted yet. Create your first one above!</p></>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Post modal */}
@@ -353,36 +382,6 @@ export function PostStudyForm() {
           </div>
         </div>
       )}
-
-      {/* Success alert */}
-      {success && (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Timeline */}
-      {filteredPosts.length > 0 && (
-        <div className="space-y-4">
-          {filteredPosts.map((post) => (
-            <TimelineCard key={post.id} post={post}
-              onDelete={handleDelete} onToggle={handleToggle}
-              onEdit={openEdit} disabled={isPending} />
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {filteredPosts.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          {searchQuery ? (
-            <><Search className="w-10 h-10 mx-auto mb-3 opacity-40" /><p className="text-sm">No studies match &ldquo;{searchQuery}&rdquo;</p></>
-          ) : (
-            <><PenLine className="w-10 h-10 mx-auto mb-3 opacity-40" /><p className="text-sm">No studies posted yet. Create your first one above!</p></>
-          )}
-        </div>
-      )}
     </div>
   )
 }
@@ -396,20 +395,28 @@ function TimelineCard({
   onEdit: (post: ResearchPost) => void
   disabled: boolean
 }) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const timeAgo = formatRelativeTime(new Date(post.created_at))
   const compensationLabel =
     post.compensation_type === 'none'
       ? 'No compensation'
       : post.compensation_type.charAt(0).toUpperCase() + post.compensation_type.slice(1)
 
+  const isLong = post.description.length > DESCRIPTION_TRUNCATE_LIMIT
+  const displayedDescription = isLong && !isExpanded
+    ? post.description.slice(0, DESCRIPTION_TRUNCATE_LIMIT).trimEnd() + '…'
+    : post.description
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-4xl shadow-sm overflow-hidden p-4">
       <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-semibold text-[#132660] text-[15px]">{post.title}</h4>
+            <h4 className="font-semibold text-[#132660] text-xl">{post.title}</h4>
             <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-              post.is_open ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'
+              post.is_open
+                ? 'bg-green-50 text-green-600 border border-green-200 rounded-4xl px-3 py-1.5'
+                : 'bg-gray-100 text-gray-500 border border-gray-200 rounded-4xl px-3 py-1.5'
             }`}>
               {post.is_open ? 'Open' : 'Closed'}
             </span>
@@ -418,44 +425,72 @@ function TimelineCard({
             <Clock className="w-3 h-3" /><span>{timeAgo}</span>
           </div>
         </div>
+
         <div className="flex items-center gap-0.5 shrink-0">
+          {/* Toggle */}
+          <button type="button" onClick={() => onToggle(post.id, post.is_open)} disabled={disabled}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"
+            title={post.is_open ? 'Close study' : 'Open study'}>
+            {post.is_open ? <LockOpen className="w-4 h-4 text-gray-400 hover:text-red-500" /> : <Lock className="w-4 h-4 hover:text-green-600" />}
+          </button>
+          {/* Edit */}
           <button type="button" onClick={() => onEdit(post)} disabled={disabled}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"
             title="Edit study">
             <Pencil className="w-4 h-4" />
           </button>
-          <button type="button" onClick={() => onToggle(post.id, post.is_open)} disabled={disabled}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"
-            title={post.is_open ? 'Close study' : 'Open study'}>
-            {post.is_open ? <ToggleRight className="w-5 h-5 text-green-600" /> : <ToggleLeft className="w-5 h-5" />}
-          </button>
+          {/* Delete */}
           <button type="button" onClick={() => onDelete(post.id)} disabled={disabled}
-            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
             title="Delete study">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* Description with expand/collapse */}
       <div className="px-5 pb-3">
-        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line line-clamp-4">{post.description}</p>
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+          {displayedDescription}
+        </p>
+        {isLong && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded((v) => !v)}
+            className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            {isExpanded ? (
+              <>Show less<ChevronUp className="w-3.5 h-3.5" /> </>
+            ) : (
+              <> Show more<ChevronDown className="w-3.5 h-3.5" /></>
+            )}
+          </button>
+        )}
       </div>
-      <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50 flex flex-wrap items-center gap-3 text-xs">
+
+      <div className="mx-5 mt-1 py-4 border-t border-gray-200 flex flex-wrap items-center gap-3 text-xs">
+        {/* Compensation Type */}
         <span className="inline-flex items-center gap-1.5 text-gray-500">
-          <span className="bg-white border border-gray-200 rounded-full px-2.5 py-0.5">{compensationLabel}</span>
+          <span className="bg-white border border-gray-200 rounded-4xl px-3 py-1.5">{compensationLabel}</span>
         </span>
+
+        {/* Amount */}
         {post.compensation_amount != null && post.compensation_amount > 0 && (
-          <span className="bg-blue-50 border border-blue-200 text-blue-700 rounded-full px-2.5 py-0.5 font-medium">
+          <span className="bg-blue-50 border border-blue-200 text-blue-700 rounded-4xl px-3 py-1.5 font-medium">
             &#8369;{post.compensation_amount.toLocaleString()}
           </span>
         )}
+
+        {/* No. of Participants */}
         {post.participants_needed != null && (
-          <span className="inline-flex items-center gap-1 bg-purple-50 border border-purple-200 text-purple-700 rounded-full px-2.5 py-0.5">
+          <span className="inline-flex items-center gap-1 bg-purple-50 border border-purple-200 text-purple-700 rounded-4xl px-3 py-1.5">
             <Users className="w-3 h-3" />{post.participants_needed}
           </span>
         )}
+
         <a href={post.registration_link} target="_blank" rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-[#132660] hover:underline font-medium">
-          Registration<ExternalLink className="w-3 h-3" />
+          className="ml-auto inline-flex items-center gap-1 text-sm text-[#132660] hover:underline font-medium">
+          Register<ExternalLink className="w-3 h-3" />
         </a>
       </div>
     </div>

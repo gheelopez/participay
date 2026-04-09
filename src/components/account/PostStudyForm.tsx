@@ -428,10 +428,22 @@ function TimelineCard({
 
         <div className="flex items-center gap-0.5 shrink-0">
           {/* Toggle */}
-          <button type="button" onClick={() => onToggle(post.id, post.is_open)} disabled={disabled}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"
-            title={post.is_open ? 'Close study' : 'Open study'}>
-            {post.is_open ? <LockOpen className="w-4 h-4 text-gray-400 hover:text-red-500" /> : <Lock className="w-4 h-4 hover:text-green-600" />}
+          <button
+            type="button"
+            onClick={() => onToggle(post.id, post.is_open)}
+            disabled={disabled}
+            title={post.is_open ? 'Close study' : 'Open study'}
+            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+              post.is_open
+                ? 'text-gray-400 hover:bg-gray-100 hover:text-red-500'
+                : 'text-gray-400 hover:bg-gray-100 hover:text-green-600'
+            }`}
+          >
+            {post.is_open ? (
+              <LockOpen className="w-4 h-4 text-inherit" />
+            ) : (
+              <Lock className="w-4 h-4 text-inherit" />
+            )}
           </button>
           {/* Edit */}
           <button type="button" onClick={() => onEdit(post)} disabled={disabled}
@@ -488,10 +500,17 @@ function TimelineCard({
           </span>
         )}
 
-        <a href={post.registration_link} target="_blank" rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-sm text-[#132660] hover:underline font-medium">
-          Register<ExternalLink className="w-3 h-3" />
-        </a>
+        <span className="ml-auto">
+          <a
+            href={post.registration_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-4xl px-3 py-1.5 text-white bg-[#132660] border border-transparent hover:text-[#132660] hover:border-[#132660] hover:bg-transparent"
+          >
+            Register
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </span>
       </div>
     </div>
   )

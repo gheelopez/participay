@@ -432,8 +432,8 @@ export async function updateProfilePhoto(formData: FormData): Promise<ActionResp
     const file = formData.get('profilePhoto') as File
     if (!file || file.size === 0) return { success: false, error: 'No file provided' }
 
-    const MAX_FILE_SIZE = 5 * 1024 * 1024
-    if (file.size > MAX_FILE_SIZE) return { success: false, error: 'File size must be less than 5MB' }
+    const MAX_FILE_SIZE = 1 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) return { success: false, error: 'File size must be less than 1MB' }
 
     const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return { success: false, error: 'Only JPEG and PNG images are accepted' }

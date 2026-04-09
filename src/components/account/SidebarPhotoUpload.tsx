@@ -18,6 +18,21 @@ export function SidebarPhotoUpload({ photoUrl, onPhotoUpdated, onError }: Sideba
     const file = e.target.files?.[0]
     if (!file) return
 
+    const MAX_FILE_SIZE = 1 * 1024 * 1024
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png']
+
+    if (file.size > MAX_FILE_SIZE) {
+      onError('File must be less than 1MB')
+      e.target.value = ''
+      return
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      onError('Only JPG and PNG files are allowed')
+      e.target.value = ''
+      return
+    }
+
     const formData = new FormData()
     formData.append('profilePhoto', file)
 

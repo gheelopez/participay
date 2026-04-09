@@ -1,6 +1,9 @@
+import fs from 'fs'
+import path from 'path'
+
 type LogLevel = 'INFO' | 'WARN' | 'ERROR'
 
-type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM' | 'TRANSACTION'
+type LogCategory = 'AUTH' | 'SECURITY' | 'SYSTEM' | 'TRANSACTION' | 'ADMIN'
 
 interface LogEntry {
   timestamp: string
@@ -11,6 +14,28 @@ interface LogEntry {
   email?: string
   ip?: string
   details?: Record<string, unknown>
+}
+
+const LOG_DIR = path.join(process.cwd(), 'logs')
+const LOG_FILE = path.join(LOG_DIR, 'app.log')
+
+function ensureLogDir() {
+  try {
+    if (!fs.existsSync(LOG_DIR)) {
+      fs.mkdirSync(LOG_DIR, { recursive: true })
+    }
+  } catch {
+    // Silent fallback — filesystem may be read-only
+  }
+}
+
+function writeToFile(message: string) {
+  try {
+    ensureLogDir()
+    fs.appendFileSync(LOG_FILE, message + '\n', 'utf-8')
+  } catch {
+    // Silent fallback — do not crash if file write fails
+  }
 }
 
 function formatEntry(entry: LogEntry): string {
@@ -43,6 +68,10 @@ function log(
 
   const message = formatEntry(entry)
 
+  // Write to file
+  writeToFile(message)
+
+  // Write to console
   switch (level) {
     case 'ERROR':
       console.error(message)

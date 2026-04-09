@@ -76,6 +76,88 @@ function postToFormState(post: ResearchPost): FormState {
 
 const DESCRIPTION_TRUNCATE_LIMIT = 180
 
+const MAX_TITLE_LENGTH = 120
+const MAX_DESCRIPTION_LENGTH = 2000
+const MAX_COMPENSATION_DETAILS_LENGTH = 250
+const MAX_PARTICIPANTS = 100000
+const MAX_COMPENSATION_AMOUNT = 1000000
+
+function normalizeUrl(raw: string): string {
+  return raw.trim()
+}
+
+function validateRegistrationLink(raw: string): string | null {
+  const value = raw.trim()
+  if (!value) return 'Registration link is required.'
+
+  try {
+    const url = new URL(value)
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return 'Registration link must use HTTP or HTTPS.'
+    }
+    return null
+  } catch {
+    return 'Please enter a valid registration link.'
+  }
+}
+
+function validateFormInput(f: FormState): string | null {
+  const title = f.title.trim()
+  const description = f.description.trim()
+  const compensationDetails = f.compensation_details.trim()
+  const participantsNeeded = Number(f.participants_needed)
+  const compensationAmount =
+    f.compensation_amount.trim() === '' ? null : Number(f.compensation_amount)
+
+  if (!title) return 'Study title is required.'
+  if (title.length > MAX_TITLE_LENGTH) {
+    return `Study title must not exceed ${MAX_TITLE_LENGTH} characters.`
+  }
+
+  if (!description) return 'Description is required.'
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
+    return `Description must not exceed ${MAX_DESCRIPTION_LENGTH} characters.`
+  }
+
+  if (compensationDetails.length > MAX_COMPENSATION_DETAILS_LENGTH) {
+    return `Compensation details must not exceed ${MAX_COMPENSATION_DETAILS_LENGTH} characters.`
+  }
+
+  const linkError = validateRegistrationLink(f.registration_link)
+  if (linkError) return linkError
+
+  if (!Number.isInteger(participantsNeeded) || participantsNeeded < 1) {
+    return 'Participants needed must be a whole number greater than 0.'
+  }
+
+  if (participantsNeeded > MAX_PARTICIPANTS) {
+    return `Participants needed must not exceed ${MAX_PARTICIPANTS.toLocaleString()}.`
+  }
+
+  const requiresAmount =
+    f.compensation_type === 'money' || f.compensation_type === 'both'
+
+  if (requiresAmount) {
+    if (compensationAmount === null || !Number.isFinite(compensationAmount)) {
+      return 'Amount per participant is required.'
+    }
+
+    if (!Number.isInteger(compensationAmount) || compensationAmount < 1) {
+      return 'Amount per participant must be a whole number greater than 0.'
+    }
+
+    if (compensationAmount > MAX_COMPENSATION_AMOUNT) {
+      return `Amount per participant must not exceed ${MAX_COMPENSATION_AMOUNT.toLocaleString()}.`
+    }
+  } else {
+    if (compensationAmount !== null) {
+      return 'Amount per participant should only be set for money or both compensation types.'
+    }
+  }
+
+  return null
+}
+
 export function PostStudyForm() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -116,70 +198,94 @@ export function PostStudyForm() {
   }
 
   function handleSubmit() {
-    setSuccess(null)
-    setError(null)
+  setSuccess(null)
+  setError(null)
 
-    const input: CreateResearchPostInput = {
-      title: form.title,
-      description: form.description,
-      registration_link: form.registration_link,
-      compensation_type: form.compensation_type,
-      compensation_details: form.compensation_details || null,
-      compensation_amount: form.compensation_amount ? parseInt(form.compensation_amount, 10) : null,
-      participants_needed: parseInt(form.participants_needed, 10) || 0,
-    }
-
-    startTransition(async () => {
-      const result = await createResearchPost(input)
-      if (result.success) {
-        setSuccess('Study posted successfully!')
-        setForm(emptyForm)
-        setIsComposerOpen(false)
-        const postsResult = await getUserResearchPosts()
-        if (postsResult.success && postsResult.data) setPosts(postsResult.data)
-        router.refresh()
-      } else {
-        setError(result.error || 'Failed to create post')
-      }
-    })
+  const validationError = validateFormInput(form)
+  if (validationError) {
+    setError(validationError)
+    return
   }
+
+  const input: CreateResearchPostInput = {
+    title: form.title.trim(),
+    description: form.description.trim(),
+    registration_link: normalizeUrl(form.registration_link),
+    compensation_type: form.compensation_type,
+    compensation_details: form.compensation_details.trim() || null,
+    compensation_amount:
+      form.compensation_amount.trim() !== ''
+        ? parseInt(form.compensation_amount, 10)
+        : null,
+    participants_needed: parseInt(form.participants_needed, 10),
+  }
+
+  startTransition(async () => {
+    const result = await createResearchPost(input)
+    if (result.success) {
+      setSuccess('Study posted successfully!')
+      setForm(emptyForm)
+      setIsComposerOpen(false)
+      const postsResult = await getUserResearchPosts()
+      if (postsResult.success && postsResult.data) setPosts(postsResult.data)
+      router.refresh()
+    } else {
+      setError(result.error || 'Failed to create post')
+    }
+  })
+}
 
   function handleEditSubmit() {
-    if (!editingPost) return
-    setEditError(null)
+  if (!editingPost) return
+  setEditError(null)
 
-    const input = {
-      title: editForm.title,
-      description: editForm.description,
-      registration_link: editForm.registration_link,
-      compensation_type: editForm.compensation_type,
-      compensation_details: editForm.compensation_details || null,
-      compensation_amount: editForm.compensation_amount ? parseInt(editForm.compensation_amount, 10) : null,
-      participants_needed: parseInt(editForm.participants_needed, 10) || 0,
-    }
-
-    startTransition(async () => {
-      const result = await updateResearchPost(editingPost.id, input)
-      if (result.success) {
-        setSuccess('Study updated successfully!')
-        setEditingPost(null)
-        const postsResult = await getUserResearchPosts()
-        if (postsResult.success && postsResult.data) setPosts(postsResult.data)
-        router.refresh()
-      } else {
-        setEditError(result.error || 'Failed to update post')
-      }
-    })
+  const validationError = validateFormInput(editForm)
+  if (validationError) {
+    setEditError(validationError)
+    return
   }
+
+  const input = {
+    title: editForm.title.trim(),
+    description: editForm.description.trim(),
+    registration_link: normalizeUrl(editForm.registration_link),
+    compensation_type: editForm.compensation_type,
+    compensation_details: editForm.compensation_details.trim() || null,
+    compensation_amount:
+      editForm.compensation_amount.trim() !== ''
+        ? parseInt(editForm.compensation_amount, 10)
+        : null,
+    participants_needed: parseInt(editForm.participants_needed, 10),
+  }
+
+  startTransition(async () => {
+    const result = await updateResearchPost(editingPost.id, input)
+    if (result.success) {
+      setSuccess('Study updated successfully!')
+      setEditingPost(null)
+      const postsResult = await getUserResearchPosts()
+      if (postsResult.success && postsResult.data) setPosts(postsResult.data)
+      router.refresh()
+    } else {
+      setEditError(result.error || 'Failed to update post')
+    }
+  })
+}
 
   function handleDelete(id: string) {
-    startTransition(async () => {
-      const result = await deleteResearchPost(id)
-      if (result.success) {
-        setPosts((prev) => prev.filter((p) => p.id !== id))
-      }
-    })
-  }
+  const confirmed = window.confirm('Are you sure you want to delete this study?')
+  if (!confirmed) return
+
+  startTransition(async () => {
+    const result = await deleteResearchPost(id)
+    if (result.success) {
+      setPosts((prev) => prev.filter((p) => p.id !== id))
+      setSuccess('Study deleted successfully!')
+    } else {
+      setError(result.error || 'Failed to delete post')
+    }
+  })
+}
 
   function handleToggle(id: string, currentOpen: boolean) {
     startTransition(async () => {
@@ -217,16 +323,26 @@ export function PostStudyForm() {
       <div className="px-6 py-5 space-y-4">
         <div className="space-y-1">
           <Label className="text-xs text-gray-500">Study Title</Label>
-          <Input value={f.title} onChange={onChange('title')} disabled={isPending}
+          <Input
+            value={f.title}
+            onChange={onChange('title')}
+            disabled={isPending}
+            maxLength={MAX_TITLE_LENGTH}
             placeholder="e.g. Survey on Student Mental Health"
-            className="rounded-xl border-gray-200 focus-visible:ring-[#132660]" />
+            className="rounded-xl border-gray-200 focus-visible:ring-[#132660]"
+          />
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-gray-500">Description</Label>
-          <textarea value={f.description} onChange={onChange('description')} disabled={isPending}
+          <textarea
+            value={f.description}
+            onChange={onChange('description')}
+            disabled={isPending}
+            maxLength={MAX_DESCRIPTION_LENGTH}
             placeholder="Describe your study, eligibility criteria, and what participants will do..."
             rows={3}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#132660]/50 focus-visible:border-[#132660] disabled:opacity-50 resize-none" />
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#132660]/50 focus-visible:border-[#132660] disabled:opacity-50 resize-none"
+          />
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-gray-500">Registration Link</Label>
@@ -264,9 +380,14 @@ export function PostStudyForm() {
         )}
         <div className="space-y-1">
           <Label className="text-xs text-gray-500">Compensation Details <span className="text-gray-300">(optional)</span></Label>
-          <Input value={f.compensation_details} onChange={onChange('compensation_details')} disabled={isPending}
+          <Input
+            value={f.compensation_details}
+            onChange={onChange('compensation_details')}
+            disabled={isPending}
+            maxLength={MAX_COMPENSATION_DETAILS_LENGTH}
             placeholder="e.g. Free lunch after the session"
-            className="rounded-xl border-gray-200 focus-visible:ring-[#132660]" />
+            className="rounded-xl border-gray-200 focus-visible:ring-[#132660]"
+          />
         </div>
       </div>
     )

@@ -21,6 +21,8 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         pillOutline:
           "rounded-full px-9 py-5 text-sm font-medium text-[#132660] bg-transparent border border-[#132660] hover:text-white hover:bg-[#132660] hover:shadow-lg disabled:cursor-not-allowed",
+        pillFull:
+          "rounded-full px-9 py-5 text-sm font-medium text-white bg-[#132660] border border-transparent hover:text-[#132660] hover:border-[#132660] hover:bg-transparent hover:shadow-lg disabled:cursor-not-allowed",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

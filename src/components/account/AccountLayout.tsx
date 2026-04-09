@@ -41,7 +41,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
   const school = profile.school || ''
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'post-study', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'post-study', label: 'Studies', icon: LayoutDashboard },
     { id: 'profile', label: 'Profile', icon: Settings },
   ]
 

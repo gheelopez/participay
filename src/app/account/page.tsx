@@ -20,7 +20,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
   const activeTab = tab === 'post-study' ? 'post-study' : 'profile'
 
   return (
-    <div className="min-h-screen bg-[#F4F4F4]">
+    <div className="min-h-screen bg-[#F2F2F2]">
       <AccountLayout profile={profile} activeTab={activeTab} />
     </div>
   )

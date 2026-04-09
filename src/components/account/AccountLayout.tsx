@@ -41,7 +41,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
   const school = profile.school || ''
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'post-study', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'post-study', label: 'Studies', icon: LayoutDashboard },
     { id: 'profile', label: 'Profile', icon: Settings },
   ]
 
@@ -58,7 +58,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
 
       <div className="flex gap-8 items-start">
         {/* Sidebar */}
-        <aside className="w-[280px] shrink-0 bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center gap-4">
+        <aside className="w-[280px] shrink-0 bg-white rounded-4xl shadow-sm p-6 flex flex-col items-center gap-4">
           {/* Photo upload */}
           <SidebarPhotoUpload
             photoUrl={photoUrl}
@@ -80,16 +80,16 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
           </div>
 
           {/* Tab nav */}
-          <nav className="w-full mt-2 flex flex-col gap-1">
+          <nav className="w-full mt-2 flex flex-col gap-3">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => switchTab(id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-4xl text-sm font-medium transition-colors duration-150 ${
                   currentTab === id
                     ? 'bg-[#132660] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 border border-transparent hover:border-[#132660] hover:text-[#132660]'
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -100,7 +100,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 min-h-0">
           {currentTab === 'profile' && (
             <ProfileForm profile={profile} />
           )}

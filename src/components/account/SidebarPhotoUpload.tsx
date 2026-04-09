@@ -24,7 +24,13 @@ export function SidebarPhotoUpload({ photoUrl, onPhotoUpdated, onError }: Sideba
     startTransition(async () => {
       const result = await updateProfilePhoto(formData)
       if (result.success && result.data) {
-        onPhotoUpdated(result.data.photoUrl)
+        const newUrl = `${result.data.photoUrl}?t=${Date.now()}`
+        onPhotoUpdated(newUrl)
+        window.dispatchEvent(
+          new CustomEvent('profile-photo-updated', {
+            detail: { photoUrl: newUrl },
+          })
+        )
       } else {
         onError(result.error || 'Failed to update photo')
       }

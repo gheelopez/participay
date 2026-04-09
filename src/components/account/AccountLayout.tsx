@@ -46,16 +46,7 @@ export function AccountLayout({ profile, activeTab }: AccountLayoutProps) {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
-      {/* Back to Home */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#132660] transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Home
-      </Link>
-
+    <div className="max-w-5xl mx-auto px-6 py-2 space-y-6">
       <div className="flex gap-8 items-start">
         {/* Sidebar */}
         <aside className="w-[280px] shrink-0 bg-white rounded-4xl shadow-sm p-6 flex flex-col items-center gap-4">

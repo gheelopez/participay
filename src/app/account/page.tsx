@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/app/actions/auth'
 import { AccountLayout } from '@/components/account/AccountLayout'
+import { AccountPageWrapper } from '@/components/AccountPageWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +21,8 @@ export default async function AccountPage({ searchParams }: PageProps) {
   const activeTab = tab === 'post-study' ? 'post-study' : 'profile'
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2]">
+    <AccountPageWrapper>
       <AccountLayout profile={profile} activeTab={activeTab} />
-    </div>
+    </AccountPageWrapper>
   )
 }
